@@ -33,7 +33,7 @@ data CacheStatus
   | HIT
   | SCARCE
   | UNKNOWN
-  deriving (Eq, Show)
+  deriving (Ord, Eq, Show)
 
 data Request = Request
   { requestMethod :: !ByteString
@@ -50,7 +50,7 @@ data AccessLogEntry = AccessLogEntry
   , aleReq :: !Request
   , aleStatus :: !Int
   , aleBytes :: !Int
-  , aleCacheStatus :: !ByteString
+  , aleCacheStatus :: CacheStatus
   , aleCacheConfig :: !ByteString
   , aleRespTime :: !Double
   } deriving (Ord, Show, Eq)
@@ -71,6 +71,20 @@ requestLine =
   (failEither . URI.parseRelativeRef URI.laxURIParserOptions =<<
    (takeWhile1 (/= ' ') <* char8 ' ' <?> "request uri")) <*>
   httpVersion <?> "request version"
+
+cacheStatus :: Parser CacheStatus
+cacheStatus = do
+  status <- plainValue <?> "cache status"
+  case status of
+    "MISS" -> pure MISS
+    "BYPASS" -> pure BYPASS
+    "EXPIRED" -> pure EXPIRED
+    "STALE" -> pure STALE
+    "UPDATING" -> pure UPDATING
+    "REVALIDATED" -> pure REVALIDATED
+    "HIT" -> pure HIT
+    "SCARCE" -> pure SCARCE
+    _ -> pure UNKNOWN
 
 skipQuote :: Parser ()
 skipQuote = skipWhile (== '\"') <?> "skip quote"
@@ -123,8 +137,7 @@ header =
   (space *> inQuotes requestLine <?> "request line") <*>
   (space *> decimal <?> "status") <*>
   (space *> decimal <?> "bytes") <*>
-  ((space *> quotedValue <?> "user agent") *> space *>
-   plainValue <?> "cache status") <*>
+  ((space *> quotedValue <?> "user agent") *> space *> cacheStatus) <*>
   (space *> plainValue <?> "cache config")
 
 accessLogEntry :: Parser AccessLogEntry

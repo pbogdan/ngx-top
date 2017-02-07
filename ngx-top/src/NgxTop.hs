@@ -94,11 +94,11 @@ updateStats stats p = do
           liftIO . atomically $
             modifyTVar' stats $ \current ->
               current & cacheHitCount .~
-              (if aleCacheStatus x == "HIT"
+              (if aleCacheStatus x == HIT
                  then succ (current ^. cacheHitCount)
                  else current ^. cacheHitCount) &
               cacheMissCount .~
-              (if aleCacheStatus x /= "HIT"
+              (if aleCacheStatus x /= HIT
                  then succ (current ^. cacheMissCount)
                  else current ^. cacheMissCount) &
               responseCodes .~
@@ -112,7 +112,7 @@ updateStats stats p = do
                 1
                 (current ^. urls) &
               responseTimes .~
-              (if aleCacheStatus x == "HIT"
+              (if aleCacheStatus x == HIT
                  then current ^. responseTimes
                  else HashMap.insertWith
                         (\(a, b) (c, d) -> (a + c, b + d))
@@ -120,7 +120,7 @@ updateStats stats p = do
                         (1, aleRespTime x)
                         (current ^. responseTimes)) &
               responseTime .~
-              (if aleCacheStatus x == "HIT"
+              (if aleCacheStatus x == HIT
                  then current ^. responseTime
                  else current ^. responseTime + aleRespTime x) &
               totalBandwidth .~
