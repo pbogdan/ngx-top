@@ -28,7 +28,7 @@ responseCodesWidget stats =
         map
           (\(code, count) ->
              str
-               ((pad 15 ' ' (show code <> ": " <> show count)) <>
+               (pad 15 ' ' (show code <> ": " <> show count) <>
                 (show
                    (round' (fromIntegral (count * 100) / fromIntegral total) 1) <>
                  "%")))
@@ -55,7 +55,7 @@ cacheHitWidget stats =
      str
        ("Total bandwidth: " <>
         show
-          (round (fromIntegral (totalBandwidth stats) / 1024 / 1024 :: Double)))
+          (round (fromIntegral (totalBandwidth stats) / 1024 / 1024 :: Double) :: Integer))
 
 topDomainsWidget :: Stats -> Widget ()
 topDomainsWidget stats =
@@ -116,9 +116,9 @@ topIPWidget stats =
      str "Top ips by number of requests:" <=> str " " <=> vBox topIPs'
 
 round'
-  :: (Fractional c, Integral b, RealFrac a)
-  => a -> b -> c
+  ::  Double -> Integer -> Double
 round' f n = fromInteger (round $ f * (10 ^ n)) / (10.0 ^^ n)
+
 
 ui :: FilePath -> Stats -> Widget ()
 ui path stats =
