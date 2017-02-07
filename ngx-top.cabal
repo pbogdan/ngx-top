@@ -47,7 +47,7 @@ library
     default-language: Haskell2010
     default-extensions: OverloadedStrings NoImplicitPrelude
     hs-source-dirs: src
-    ghc-options: -Wall -Wall
+    ghc-options: -Wall
 
 executable ngx-top
     main-is: Main.hs
@@ -58,7 +58,7 @@ executable ngx-top
     default-language: Haskell2010
     default-extensions: OverloadedStrings NoImplicitPrelude
     hs-source-dirs: app
-    ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
+    ghc-options: -Wall -threaded -rtsopts "-with-rtsopts=-N -M256M"
 
 test-suite ngx-top-test
     type: exitcode-stdio-1.0
