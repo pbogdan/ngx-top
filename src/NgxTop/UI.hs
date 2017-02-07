@@ -10,7 +10,7 @@ import           Brick.Widgets.Border
 import qualified Data.HashMap.Strict as HashMap
 import           Data.IP
 import qualified Data.IntMap as IntMap
-import           Graphics.Vty.Attributes (defAttr)
+import           Graphics.Vty.Attributes
 import           Types
 
 pad
@@ -34,7 +34,9 @@ responseCodesWidget stats =
                  "%")))
           (IntMap.toAscList codes)
   in padLeft (Pad 1) $
-     padRight (Pad 1) (str "Response codes:" <=> str " " <=> vBox lines)
+     padRight
+       (Pad 1)
+       (withAttr "bold" (str "Response codes:") <=> str " " <=> vBox lines)
 
 cacheHitWidget :: Stats -> Widget ()
 cacheHitWidget stats =
@@ -45,13 +47,21 @@ cacheHitWidget stats =
         fromIntegral (cacheMissCount stats * 100) / fromIntegral total
   in padLeft (Pad 1) $
      padRight (Pad 1) $
-     str "Requests:" <=> str " " <=> str ("Total requests: " <> show total) <=>
+     withAttr "bold" (str "Requests:") <=> str " " <=>
+     str ("Total requests: " <> show total) <=>
      str ("Cache hits: " <> show (cacheHitCount stats)) <=>
      str ("Cache misses: " <> show (cacheMissCount stats)) <=>
      str
        ("Cache hit ratio: " <> show (round hitRatio :: Integer) <> " / " <>
         show (round missRatio :: Integer)) <=>
      str ("Avg. rq / s: " <> show (round' (requestsPerSecond stats) 2)) <=>
+     str
+       ("Avg. rq time: " <>
+        show
+          (round'
+             (responseTime stats /
+              fromIntegral (cacheMissCount stats))
+             2)) <=>
      str
        ("Total bandwidth: " <>
         show
@@ -60,14 +70,16 @@ cacheHitWidget stats =
 topDomainsWidget :: Stats -> Widget ()
 topDomainsWidget stats =
   let topDomains =
-        take 10 $ sortBy (flip compare `on` snd) $ HashMap.toList (domains stats)
+        take 10 $
+        sortBy (flip compare `on` snd) $ HashMap.toList (domains stats)
       topDomains' =
         map
           (\(domain, count) ->
              str (pad 30 ' ' (toS (decodeUtf8 domain)) <> ": " <> show count))
           topDomains
   in padLeft (Pad 1) $
-     padRight (Pad 1) $ str "Top domains:" <=> str " " <=> vBox topDomains'
+     padRight (Pad 1) $
+     withAttr "bold" (str "Top domains:") <=> str " " <=> vBox topDomains'
 
 topUrlsWidget :: Stats -> Widget ()
 topUrlsWidget stats =
@@ -80,7 +92,8 @@ topUrlsWidget stats =
           topUrls
   in padLeft (Pad 1) $
      padRight (Pad 1) $
-     str "Top urls by number of requests:" <=> str " " <=> vBox topUrls'
+     withAttr "bold" (str "Top urls by number of requests:") <=> str " " <=>
+     vBox topUrls'
 
 responseTimesWidget :: Stats -> Widget ()
 responseTimesWidget stats =
@@ -100,7 +113,8 @@ responseTimesWidget stats =
           topUrls
   in padLeft (Pad 1) $
      padRight (Pad 1) $
-     str "Top MISS urls by average response time:" <=> str " " <=> vBox lines
+     withAttr "bold" (str "Top MISS urls by average response time:") <=> str " " <=>
+     vBox lines
 
 topIPWidget :: Stats -> Widget ()
 topIPWidget stats =
@@ -113,7 +127,7 @@ topIPWidget stats =
           topIPs
   in padLeft (Pad 1) $
      padRight (Pad 1) $
-     str "Top ips by number of requests:" <=> str " " <=> vBox topIPs'
+     withAttr "bold" (str "Top ips by number of requests:") <=> str " " <=> vBox topIPs'
 
 round'
   ::  Double -> Integer -> Double
@@ -140,7 +154,9 @@ app path =
   { appDraw = draw path
   , appHandleEvent = eventHandler
   , appStartEvent = return
-  , appAttrMap = const $ attrMap defAttr []
+  , appAttrMap =
+      const $
+      attrMap defAttr [(attrName "bold", Attr (SetTo bold) Default Default)]
   , appChooseCursor = neverShowCursor
   }
 

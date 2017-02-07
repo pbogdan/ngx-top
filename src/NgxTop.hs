@@ -33,6 +33,7 @@ run path = do
           HashMap.empty
           0
           0
+          0
           HashMap.empty
           0
   stats <- atomically $ newTVar initialStats
@@ -116,6 +117,10 @@ updateStats stats p = do
                            (aleHost x <> rrPath (requestUri $ aleReq x))
                            (1, aleRespTime x)
                            (responseTimes current)
+              , responseTime =
+                  if aleCacheStatus x == "HIT"
+                    then responseTime current
+                    else responseTime current + aleRespTime x
               , totalBandwidth = totalBandwidth current + aleBytes x
               , ips =
                   HashMap.insertWith (+) (fromIPv4 . aleIP $ x) 1 (ips current)
