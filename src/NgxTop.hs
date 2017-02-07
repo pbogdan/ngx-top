@@ -9,6 +9,7 @@ import           Brick.Main
 import           Control.Concurrent.STM.TVar
 import           Control.Lens hiding (lined)
 import qualified Data.HashMap.Strict as HashMap
+import           Data.IP
 import qualified Data.IntMap.Strict as IntMap
 import           Graphics.Vty
 import           Log.Nginx
@@ -23,7 +24,16 @@ import           URI.ByteString
 run :: FilePath -> IO ()
 run path = do
   let initialStats =
-        Stats 0 0 IntMap.empty HashMap.empty HashMap.empty HashMap.empty 0 0
+        Stats
+          0
+          0
+          IntMap.empty
+          HashMap.empty
+          HashMap.empty
+          HashMap.empty
+          0
+          0
+          HashMap.empty
   stats <- atomically $ newTVar initialStats
   eventChan <- newBChan 10
   a <- async $ void $ tailFile path (updateStats stats)
@@ -102,5 +112,7 @@ updateStats stats p = do
                            (1, aleRespTime x)
                            (responseTimes current)
               , totalBandwidth = totalBandwidth current + aleBytes x
+              , ips =
+                  HashMap.insertWith (+) (fromIPv4 . aleIP $ x) 1 (ips current)
               })
   return (undefined :: void, undefined :: r)

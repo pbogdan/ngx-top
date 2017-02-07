@@ -13,4 +13,5 @@ data Stats = Stats
   , responseTimes :: HashMap ByteString (Int, Double)
   , requestsPerSecond :: !Int
   , totalBandwidth :: !Int
+  , ips :: HashMap [Int] Int
   } deriving (Eq, Show)

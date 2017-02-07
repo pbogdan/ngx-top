@@ -8,6 +8,7 @@ import           Protolude
 import           Brick hiding (on)
 import           Brick.Widgets.Border
 import qualified Data.HashMap.Strict as HashMap
+import           Data.IP
 import qualified Data.IntMap as IntMap
 import           Graphics.Vty.Attributes (defAttr)
 import           Types
@@ -95,6 +96,19 @@ responseTimesWidget stats =
      padRight (Pad 1) $
      str "Top MISS urls by average response time:" <=> str " " <=> vBox lines
 
+topIPWidget :: Stats -> Widget ()
+topIPWidget stats =
+  let topIPs =
+        take 10 $ sortBy (flip compare `on` snd) $ HashMap.toList (ips stats)
+      topIPs' =
+        map
+          (\(ip, count) ->
+             str (pad 16 ' ' (show . toIPv4 $ ip) <> ": " <> show count))
+          topIPs
+  in padLeft (Pad 1) $
+     padRight (Pad 1) $
+     str "Top ips by number of requests:" <=> str " " <=> vBox topIPs'
+
 round'
   :: (Fractional c, Integral b, RealFrac a)
   => a -> b -> c
@@ -104,7 +118,9 @@ ui :: FilePath -> Stats -> Widget ()
 ui path stats =
   hBox [str ("ngx-top @ " <> path)] <=> hBorder <=>
   (responseCodesWidget stats <+>
-   vBorder <+> cacheHitWidget stats <+> vBorder <+> topDomainsWidget stats) <=>
+   vBorder <+>
+   cacheHitWidget stats <+>
+   vBorder <+> topDomainsWidget stats <+> vBorder <+> topIPWidget stats) <=>
   hBorder <=>
   topUrlsWidget stats <=>
   hBorder <=>
