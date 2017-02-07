@@ -59,44 +59,51 @@ data AccessLogEntry = AccessLogEntry
   , aleResponseTime :: !Double
   } deriving (Ord, Show, Eq)
 
+wrap :: Semigroup a => a -> a -> a
+wrap x y = x <> y <> x
+
+brackets
+  :: (IsString a, Semigroup a)
+  => a -> a
+brackets x = "[" <> x <> "]"
+
+displayRequest :: AccessLogEntry -> ByteString
+displayRequest entry =
+  (requestMethod . aleRequest $ entry) <>
+  wrap
+    " "
+    (LazyBytes.toStrict .
+     BB.toLazyByteString . URI.serializeURIRef . requestUri . aleRequest $
+     entry) <>
+  "HTTP/" <>
+  (requestVersion . aleRequest $ entry)
+
 toLogLine :: AccessLogEntry -> ByteString
 toLogLine entry =
-  Bytes.concat
+  Bytes.intercalate
+    " "
     [ show . aleIP $ entry
-    , " "
-    , aleIdent entry
-    , " "
-    , aleUser entry
-    , " "
-    , "["
-    , toS . formatTime defaultTimeLocale "%d/%h/%Y:%H:%M:%S %z" $ aleDate entry
-    , "]"
-    , " "
+    , case aleIdent entry of
+        "" -> "-"
+        x -> x
+    , case aleUser entry of
+        "" -> "-"
+        x -> x
+    , brackets . toS . formatTime defaultTimeLocale "%d/%h/%Y:%H:%M:%S %z" $
+      aleDate entry
     , aleHost entry
-    , " "
-    , "\""
-    , requestMethod . aleRequest $ entry
-    , " "
-    , LazyBytes.toStrict .
-      BB.toLazyByteString . URI.serializeURIRef . requestUri . aleRequest $
-      entry
-    , " "
-    , "HTTP/"
-    , requestVersion . aleRequest $ entry
-    , "\""
-    , " "
+    , wrap "\"" (displayRequest entry)
     , show . aleResponseCode $ entry
-    , " "
     , show . aleResponseSize $ entry
-    , " \""
-    , aleUserAgent entry
-    , "\" "
+    , wrap
+        "\""
+        (case aleUserAgent entry of
+           "" -> "-"
+           x -> x)
     , case aleCacheStatus entry of
         UNKNOWN -> "-"
         x -> show x
-    , " "
     , aleCacheConfig entry
-    , " "
     , show . aleResponseTime $ entry
     ]
 
@@ -180,10 +187,10 @@ header =
     bracketedValue)) <*>
   (space *> plainValue <?> "host") <*>
   (space *> inQuotes requestLine <?> "request line") <*>
-  (space *> decimal <?> "status") <*>
+  (space *> decimal <?> "response code") <*>
   (space *> decimal <?> "bytes") <*>
   (space *> quotedValue <?> "user agent") <*>
-  (space *> cacheStatus) <*>
+  (space *> cacheStatus <?> "cache status") <*>
   (space *> plainValue <?> "cache config")
 
 accessLogEntry :: Parser AccessLogEntry
