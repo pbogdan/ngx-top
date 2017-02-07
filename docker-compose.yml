@@ -4,7 +4,5 @@ ngx-top-build:
   volumes:
   - ./build:/build
   - .:/src/ngx-top
-  - ./log-parser:/src/***REMOVED***/log-parser
-  - ./:/source
   working_dir: /tmp
   command: sh /src/ngx-top/docker-build.sh
