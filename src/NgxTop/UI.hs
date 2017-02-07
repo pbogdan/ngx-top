@@ -1,7 +1,10 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module NgxTop.UI where
+module NgxTop.UI
+  ( Update(..)
+  , app
+  ) where
 
 import           Protolude
 

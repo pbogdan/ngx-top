@@ -1,4 +1,6 @@
-module Types where
+module Types
+  ( Stats(..)
+  ) where
 
 import Protolude
 

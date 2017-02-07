@@ -1,6 +1,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module NgxTop where
+module NgxTop
+  ( run
+  ) where
 
 import           Protolude hiding ((&))
 
@@ -8,6 +10,7 @@ import           Brick.BChan
 import           Brick.Main
 import           Control.Concurrent.STM.TVar
 import           Control.Lens hiding (lined)
+import qualified Control.Foldl as Fold
 import qualified Data.HashMap.Strict as HashMap
 import           Data.IP
 import qualified Data.IntMap.Strict as IntMap
@@ -41,17 +44,6 @@ run path = do
   a <- async $ void $ tailFile path (updateStats stats)
   b <-
     async $
-    void $
-    forever $ do
-      current <-
-        atomically $ do
-          modifyTVar' stats $ \current ->
-            current {updateCount = updateCount current + 1}
-          readTVar stats
-      writeBChan eventChan $ Update current
-      threadDelay 1000000
-  c <-
-    async $
     void $ do
       _ <-
         customMain
@@ -60,6 +52,19 @@ run path = do
           (app path)
           initialStats
       return ()
+  c <-
+    async $
+    void $
+    forever $ do
+      current <- atomically $ readTVar stats
+      if cacheHitCount current + cacheMissCount current > 0
+        then do
+          atomically $
+            modifyTVar' stats $ \current' ->
+              current' {updateCount = updateCount current' + 1}
+          writeBChan eventChan $ Update current
+          threadDelay 1000000
+        else threadDelay 5000
   (_, ret) <- waitAnyCatchCancel [a, b, c]
   case ret of
     Left e -> print e
@@ -68,7 +73,7 @@ run path = do
 lined
   :: Monad m
   => Producer ByteString m x -> Producer ByteString m x
-lined = PG.concats . view PB.lines
+lined p = Fold.purely PG.folds Fold.mconcat (view PB.lines p)
 
 parseLine
   :: Monad m
