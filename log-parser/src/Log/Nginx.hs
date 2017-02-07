@@ -50,13 +50,13 @@ data AccessLogEntry = AccessLogEntry
   , aleUser :: !ByteString
   , aleDate :: !UTCTime
   , aleHost :: !ByteString
-  , aleReq :: !Request
-  , aleStatus :: !Int
-  , aleBytes :: !Int
-  , aleUA :: !ByteString
+  , aleRequest :: !Request
+  , aleResponseCode :: !Int
+  , aleResponseSize :: !Int
+  , aleUserAgent :: !ByteString
   , aleCacheStatus :: CacheStatus
   , aleCacheConfig :: !ByteString
-  , aleRespTime :: !Double
+  , aleResponseTime :: !Double
   } deriving (Ord, Show, Eq)
 
 toLogLine :: AccessLogEntry -> ByteString
@@ -75,29 +75,29 @@ toLogLine entry =
     , aleHost entry
     , " "
     , "\""
-    , requestMethod . aleReq $ entry
+    , requestMethod . aleRequest $ entry
     , " "
     , LazyBytes.toStrict .
-      BB.toLazyByteString . URI.serializeURIRef . requestUri . aleReq $
+      BB.toLazyByteString . URI.serializeURIRef . requestUri . aleRequest $
       entry
     , " "
     , "HTTP/"
-    , requestVersion . aleReq $ entry
+    , requestVersion . aleRequest $ entry
     , "\""
     , " "
-    , show . aleStatus $ entry
+    , show . aleResponseCode $ entry
     , " "
-    , show . aleBytes $ entry
+    , show . aleResponseSize $ entry
     , " \""
-    , aleUA entry
+    , aleUserAgent entry
     , "\" "
     , case aleCacheStatus entry of
         UNKNOWN -> "-"
-        _ -> show . aleCacheStatus $ entry
+        x -> show x
     , " "
     , aleCacheConfig entry
     , " "
-    , show . aleRespTime $ entry
+    , show . aleResponseTime $ entry
     ]
 
 isAscii :: Char -> Bool

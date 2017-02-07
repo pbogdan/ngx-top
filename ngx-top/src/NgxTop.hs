@@ -102,13 +102,17 @@ updateStats stats p = do
                  then succ (current ^. cacheMissCount)
                  else current ^. cacheMissCount) &
               responseCodes .~
-              IntMap.insertWith (+) (aleStatus x) 1 (current ^. responseCodes) &
+              IntMap.insertWith
+                (+)
+                (aleResponseCode x)
+                1
+                (current ^. responseCodes) &
               domains .~
               HashMap.insertWith (+) (aleHost x) 1 (current ^. domains) &
               urls .~
               HashMap.insertWith
                 (+)
-                (aleHost x <> rrPath (requestUri $ aleReq x))
+                (aleHost x <> rrPath (requestUri $ aleRequest x))
                 1
                 (current ^. urls) &
               responseTimes .~
@@ -116,16 +120,16 @@ updateStats stats p = do
                  then current ^. responseTimes
                  else HashMap.insertWith
                         (\(a, b) (c, d) -> (a + c, b + d))
-                        (aleHost x <> rrPath (requestUri $ aleReq x))
-                        (1, aleRespTime x)
+                        (aleHost x <> rrPath (requestUri $ aleRequest x))
+                        (1, aleResponseTime x)
                         (current ^. responseTimes)) &
               responseTime .~
               (if aleCacheStatus x == HIT
                  then current ^. responseTime
-                 else current ^. responseTime + aleRespTime x) &
+                 else current ^. responseTime + aleResponseTime x) &
               totalBandwidth .~
               current ^.
               totalBandwidth +
-              aleBytes x & ips .~
+              aleResponseSize x & ips .~
               HashMap.insertWith (+) (fromIPv4 . aleIP $ x) 1 (current ^. ips))
   return (undefined :: void, undefined :: r)
