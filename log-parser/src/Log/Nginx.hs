@@ -6,6 +6,7 @@ module Log.Nginx
   ( lbsParseAccessLogEntry
   , parseAccessLogEntry
   , accessLogEntry
+  , toLogLine
   , Request(..)
   , AccessLogEntry(..)
   , CacheStatus(..)
@@ -15,6 +16,8 @@ import           Control.Monad
 import           Data.Attoparsec.ByteString.Char8
 import qualified Data.Attoparsec.ByteString.Lazy as AL
 import           Data.ByteString (ByteString)
+import qualified Data.ByteString as Bytes
+import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy as LazyBytes
 import           Data.IP
 import           Data.Time
@@ -50,10 +53,52 @@ data AccessLogEntry = AccessLogEntry
   , aleReq :: !Request
   , aleStatus :: !Int
   , aleBytes :: !Int
+  , aleUA :: !ByteString
   , aleCacheStatus :: CacheStatus
   , aleCacheConfig :: !ByteString
   , aleRespTime :: !Double
   } deriving (Ord, Show, Eq)
+
+toLogLine :: AccessLogEntry -> ByteString
+toLogLine entry =
+  Bytes.concat
+    [ show . aleIP $ entry
+    , " "
+    , aleIdent entry
+    , " "
+    , aleUser entry
+    , " "
+    , "["
+    , toS . formatTime defaultTimeLocale "%d/%h/%Y:%H:%M:%S %z" $ aleDate entry
+    , "]"
+    , " "
+    , aleHost entry
+    , " "
+    , "\""
+    , requestMethod . aleReq $ entry
+    , " "
+    , LazyBytes.toStrict .
+      BB.toLazyByteString . URI.serializeURIRef . requestUri . aleReq $
+      entry
+    , " "
+    , "HTTP/"
+    , requestVersion . aleReq $ entry
+    , "\""
+    , " "
+    , show . aleStatus $ entry
+    , " "
+    , show . aleBytes $ entry
+    , " \""
+    , aleUA entry
+    , "\" "
+    , case aleCacheStatus entry of
+        UNKNOWN -> "-"
+        _ -> show . aleCacheStatus $ entry
+    , " "
+    , aleCacheConfig entry
+    , " "
+    , show . aleRespTime $ entry
+    ]
 
 isAscii :: Char -> Bool
 isAscii = (< toEnum 127)
@@ -137,7 +182,8 @@ header =
   (space *> inQuotes requestLine <?> "request line") <*>
   (space *> decimal <?> "status") <*>
   (space *> decimal <?> "bytes") <*>
-  ((space *> quotedValue <?> "user agent") *> space *> cacheStatus) <*>
+  (space *> quotedValue <?> "user agent") <*>
+  (space *> cacheStatus) <*>
   (space *> plainValue <?> "cache config")
 
 accessLogEntry :: Parser AccessLogEntry
