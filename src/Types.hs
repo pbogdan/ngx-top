@@ -11,7 +11,8 @@ data Stats = Stats
   , domains :: HashMap ByteString Int
   , urls :: HashMap ByteString Int
   , responseTimes :: HashMap ByteString (Int, Double)
-  , requestsPerSecond :: !Int
+  , requestsPerSecond :: !Double
   , totalBandwidth :: !Int
   , ips :: HashMap [Int] Int
+  , updateCount :: !Int
   } deriving (Eq, Show)

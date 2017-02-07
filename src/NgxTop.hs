@@ -34,6 +34,7 @@ run path = do
           0
           0
           HashMap.empty
+          0
   stats <- atomically $ newTVar initialStats
   eventChan <- newBChan 10
   a <- async $ void $ tailFile path (updateStats stats)
@@ -41,7 +42,11 @@ run path = do
     async $
     void $
     forever $ do
-      current <- atomically $ readTVar stats
+      current <-
+        atomically $ do
+          modifyTVar' stats $ \current ->
+            current {updateCount = updateCount current + 1}
+          readTVar stats
       writeBChan eventChan $ Update current
       threadDelay 1000000
   c <-

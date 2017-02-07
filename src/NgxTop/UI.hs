@@ -45,7 +45,7 @@ cacheHitWidget stats =
      str
        ("Cache hit ratio: " <> show (round hitRatio :: Integer) <> " / " <>
         show (round missRatio :: Integer)) <=>
-     str ("Requests / s: " <> show (requestsPerSecond stats)) <=>
+     str ("Avg. rq / s: " <> show (round' (requestsPerSecond stats) 2)) <=>
      str
        ("Total bandwidth: " <>
         show
@@ -144,11 +144,11 @@ draw path stats = [ui path stats]
 data Update = Update Stats
 
 eventHandler :: Stats -> BrickEvent n Update -> EventM n (Next Stats)
-eventHandler prev (AppEvent (Update current)) =
+eventHandler _prev (AppEvent (Update current)) =
   continue
     (current
      { requestsPerSecond =
-         (cacheHitCount current + cacheMissCount current) -
-         (cacheHitCount prev + cacheMissCount prev)
+         fromIntegral (cacheHitCount current + cacheMissCount current) /
+         fromIntegral (updateCount current)
      })
 eventHandler stats e = resizeOrQuit stats e
