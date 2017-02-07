@@ -23,7 +23,7 @@ import           URI.ByteString
 run :: FilePath -> IO ()
 run path = do
   let initialStats =
-        Stats 0 0 IntMap.empty HashMap.empty HashMap.empty HashMap.empty 0
+        Stats 0 0 IntMap.empty HashMap.empty HashMap.empty HashMap.empty 0 0
   stats <- atomically $ newTVar initialStats
   eventChan <- newBChan 10
   a <- async $ void $ tailFile path (updateStats stats)
@@ -101,5 +101,6 @@ updateStats stats p = do
                            (aleHost x <> rrPath (requestUri $ aleReq x))
                            (1, aleRespTime x)
                            (responseTimes current)
+              , totalBandwidth = totalBandwidth current + aleBytes x
               })
   return (undefined :: void, undefined :: r)

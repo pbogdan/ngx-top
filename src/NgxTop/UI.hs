@@ -41,7 +41,11 @@ cacheHitWidget stats =
      str
        ("Cache hit ratio: " <> show (round hitRatio :: Integer) <> " / " <>
         show (round missRatio :: Integer)) <=>
-     str ("Requests / s: " <> show (requestsPerSecond stats))
+     str ("Requests / s: " <> show (requestsPerSecond stats)) <=>
+     str
+       ("Total bandwidth: " <>
+        show
+          (round (fromIntegral (totalBandwidth stats) / 1024 / 1024 :: Double)))
 
 topDomainsWidget :: Stats -> Widget ()
 topDomainsWidget stats =
