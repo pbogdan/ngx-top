@@ -65,7 +65,7 @@ topUrlsWidget stats =
           topUrls
   in padLeft (Pad 1) $
      padRight (Pad 1) $
-     str "Top url by number of requestss:" <=> str " " <=> vBox topUrls'
+     str "Top urls by number of requests:" <=> str " " <=> vBox topUrls'
 
 responseTimesWidget :: Stats -> Widget ()
 responseTimesWidget stats =
