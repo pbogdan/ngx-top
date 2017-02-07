@@ -116,7 +116,8 @@ round' f n = fromInteger (round $ f * (10 ^ n)) / (10.0 ^^ n)
 
 ui :: FilePath -> Stats -> Widget ()
 ui path stats =
-  hBox [str ("ngx-top @ " <> path)] <=> hBorder <=>
+  hBox [padLeft (Pad 1) $ padRight (Pad 1) $str ("ngx-top @ " <> path)] <=>
+  hBorder <=>
   (responseCodesWidget stats <+>
    vBorder <+>
    cacheHitWidget stats <+>
