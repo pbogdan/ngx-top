@@ -6,10 +6,11 @@ module NgxTop.UI
   , app
   ) where
 
-import           Protolude
+import           Protolude hiding ((&))
 
 import           Brick hiding (on)
 import           Brick.Widgets.Border
+import           Control.Lens
 import qualified Data.HashMap.Strict as HashMap
 import           Data.IP
 import qualified Data.IntMap as IntMap
@@ -25,8 +26,8 @@ pad n x xs
 
 responseCodesWidget :: Stats -> Widget ()
 responseCodesWidget stats =
-  let codes = responseCodes stats
-      total = cacheHitCount stats + cacheMissCount stats
+  let codes = stats ^. responseCodes
+      total = stats ^. totalRequests
       lines =
         map
           (\(code, count) ->
@@ -43,38 +44,38 @@ responseCodesWidget stats =
 
 cacheHitWidget :: Stats -> Widget ()
 cacheHitWidget stats =
-  let total = cacheHitCount stats + cacheMissCount stats
+  let total = stats ^. totalRequests
       (hitRatio :: Double) =
-        fromIntegral (cacheHitCount stats * 100) / fromIntegral total
+        fromIntegral (stats ^. cacheHitCount * 100) / fromIntegral total
       (missRatio :: Double) =
-        fromIntegral (cacheMissCount stats * 100) / fromIntegral total
+        fromIntegral (stats ^. cacheMissCount * 100) / fromIntegral total
   in padLeft (Pad 1) $
      padRight (Pad 1) $
      withAttr "bold" (str "Requests:") <=> str " " <=>
      str ("Total requests: " <> show total) <=>
-     str ("Cache hits: " <> show (cacheHitCount stats)) <=>
-     str ("Cache misses: " <> show (cacheMissCount stats)) <=>
+     str ("Cache hits: " <> show (stats ^. cacheHitCount)) <=>
+     str ("Cache misses: " <> show (stats ^. cacheMissCount)) <=>
      str
        ("Cache hit ratio: " <> show (round hitRatio :: Integer) <> " / " <>
         show (round missRatio :: Integer)) <=>
-     str ("Avg. rq / s: " <> show (round' (requestsPerSecond stats) 2)) <=>
+     str ("Avg. rq / s: " <> show (round' (stats ^. requestsPerSecond) 2)) <=>
      str
        ("Avg. rq time: " <>
         show
           (round'
-             (responseTime stats /
-              fromIntegral (cacheMissCount stats))
+             (stats ^. responseTime / fromIntegral (stats ^. cacheMissCount))
              2)) <=>
      str
        ("Total bandwidth: " <>
         show
-          (round (fromIntegral (totalBandwidth stats) / 1024 / 1024 :: Double) :: Integer))
+          (round
+             (fromIntegral (stats ^. totalBandwidth) / 1024 / 1024 :: Double) :: Integer))
 
 topDomainsWidget :: Stats -> Widget ()
 topDomainsWidget stats =
   let topDomains =
         take 10 $
-        sortBy (flip compare `on` snd) $ HashMap.toList (domains stats)
+        sortBy (flip compare `on` snd) $ HashMap.toList (stats ^. domains)
       topDomains' =
         map
           (\(domain, count) ->
@@ -87,7 +88,8 @@ topDomainsWidget stats =
 topUrlsWidget :: Stats -> Widget ()
 topUrlsWidget stats =
   let topUrls =
-        take 10 $ sortBy (flip compare `on` snd) $ HashMap.toList (urls stats)
+        take 10 $
+        sortBy (flip compare `on` snd) $ HashMap.toList (stats ^. urls)
       topUrls' =
         map
           (\(domain, count) ->
@@ -105,7 +107,7 @@ responseTimesWidget stats =
         sortBy
           (\(_, (a, b)) (_, (c, d)) ->
              compare (d / fromIntegral c) (b / fromIntegral a)) $
-        HashMap.toList (responseTimes stats)
+        HashMap.toList (stats ^. responseTimes)
       lines =
         map
           (\(url, (count, time)) ->
@@ -122,7 +124,7 @@ responseTimesWidget stats =
 topIPWidget :: Stats -> Widget ()
 topIPWidget stats =
   let topIPs =
-        take 10 $ sortBy (flip compare `on` snd) $ HashMap.toList (ips stats)
+        take 10 $ sortBy (flip compare `on` snd) $ HashMap.toList (stats ^. ips)
       topIPs' =
         map
           (\(ip, count) ->
@@ -130,7 +132,8 @@ topIPWidget stats =
           topIPs
   in padLeft (Pad 1) $
      padRight (Pad 1) $
-     withAttr "bold" (str "Top ips by number of requests:") <=> str " " <=> vBox topIPs'
+     withAttr "bold" (str "Top ips by number of requests:") <=> str " " <=>
+     vBox topIPs'
 
 round'
   ::  Double -> Integer -> Double
@@ -169,11 +172,5 @@ draw path stats = [ui path stats]
 data Update = Update Stats
 
 eventHandler :: Stats -> BrickEvent n Update -> EventM n (Next Stats)
-eventHandler _prev (AppEvent (Update current)) =
-  continue
-    (current
-     { requestsPerSecond =
-         fromIntegral (cacheHitCount current + cacheMissCount current) /
-         fromIntegral (updateCount current)
-     })
+eventHandler _prev (AppEvent (Update current)) = continue current
 eventHandler stats e = resizeOrQuit stats e
