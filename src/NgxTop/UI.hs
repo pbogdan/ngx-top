@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module NgxTop.UI where
@@ -11,10 +12,12 @@ import qualified Data.IntMap as IntMap
 import           Graphics.Vty.Attributes (defAttr)
 import           Types
 
-pad :: Int -> a -> [a] -> [a]
+pad
+  :: TextWidth [a]
+  => Int -> a -> [a] -> [a]
 pad n x xs
-  | length xs >= n = xs
-  | otherwise = xs ++ replicate (n - length xs) x
+  | textWidth xs >= n = xs
+  | otherwise = xs ++ replicate (n - textWidth xs) x
 
 responseCodesWidget :: Stats -> Widget ()
 responseCodesWidget stats =
@@ -54,7 +57,7 @@ topDomainsWidget stats =
       topDomains' =
         map
           (\(domain, count) ->
-             str (pad 30 ' ' (toS domain) <> ": " <> show count))
+             str (pad 30 ' ' (toS (decodeUtf8 domain)) <> ": " <> show count))
           topDomains
   in padLeft (Pad 1) $
      padRight (Pad 1) $ str "Top domains:" <=> str " " <=> vBox topDomains'
@@ -66,7 +69,7 @@ topUrlsWidget stats =
       topUrls' =
         map
           (\(domain, count) ->
-             str (pad 80 ' ' (toS domain) <> ": " <> show count))
+             str (pad 80 ' ' (toS (decodeUtf8 domain)) <> ": " <> show count))
           topUrls
   in padLeft (Pad 1) $
      padRight (Pad 1) $
@@ -84,7 +87,7 @@ responseTimesWidget stats =
         map
           (\(url, (count, time)) ->
              str
-               (pad 80 ' ' (toS url) <> ": " <>
+               (pad 80 ' ' (toS (decodeUtf8 url)) <> ": " <>
                 show
                   (round' (time / fromIntegral count) (2 :: Integer) :: Double)))
           topUrls
