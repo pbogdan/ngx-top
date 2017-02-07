@@ -93,5 +93,13 @@ updateStats stats p = do
                     (aleHost x <> rrPath (requestUri $ aleReq x))
                     1
                     (urls current)
+              , responseTimes =
+                  if aleCacheStatus x == "HIT"
+                    then responseTimes current
+                    else HashMap.insertWith
+                           (\(a, b) (c, d) -> (a + c, b + d))
+                           (aleHost x <> rrPath (requestUri $ aleReq x))
+                           (1, aleRespTime x)
+                           (responseTimes current)
               })
   return (undefined :: void, undefined :: r)

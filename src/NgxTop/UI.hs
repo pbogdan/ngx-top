@@ -45,7 +45,7 @@ cacheHitWidget stats =
 topDomainsWidget :: Stats -> Widget ()
 topDomainsWidget stats =
   let topDomains =
-        take 5 $ sortBy (flip compare `on` snd) $ HashMap.toList (domains stats)
+        take 10 $ sortBy (flip compare `on` snd) $ HashMap.toList (domains stats)
       topDomains' =
         map
           (\(domain, count) ->
@@ -57,22 +57,50 @@ topDomainsWidget stats =
 topUrlsWidget :: Stats -> Widget ()
 topUrlsWidget stats =
   let topUrls =
-        take 5 $ sortBy (flip compare `on` snd) $ HashMap.toList (urls stats)
+        take 10 $ sortBy (flip compare `on` snd) $ HashMap.toList (urls stats)
       topUrls' =
         map
           (\(domain, count) ->
              str (pad 80 ' ' (toS domain) <> ": " <> show count))
           topUrls
   in padLeft (Pad 1) $
-     padRight (Pad 1) $ str "Top urls:" <=> str " " <=> vBox topUrls'
+     padRight (Pad 1) $
+     str "Top url by number of requestss:" <=> str " " <=> vBox topUrls'
+
+responseTimesWidget :: Stats -> Widget ()
+responseTimesWidget stats =
+  let topUrls =
+        take 10 $
+        sortBy
+          (\(_, (a, b)) (_, (c, d)) ->
+             compare (d / fromIntegral c) (b / fromIntegral a)) $
+        HashMap.toList (responseTimes stats)
+      lines =
+        map
+          (\(url, (count, time)) ->
+             str
+               (pad 80 ' ' (toS url) <> ": " <>
+                show
+                  (round' (time / fromIntegral count) (2 :: Integer) :: Double)))
+          topUrls
+  in padLeft (Pad 1) $
+     padRight (Pad 1) $
+     str "Top MISS urls by average response time:" <=> str " " <=> vBox lines
+
+round'
+  :: (Fractional c, Integral b, RealFrac a)
+  => a -> b -> c
+round' f n = fromInteger (round $ f * (10 ^ n)) / (10.0 ^^ n)
 
 ui :: FilePath -> Stats -> Widget ()
 ui path stats =
-  hBox [str path] <=> hBorder <=>
+  hBox [str ("ngx-top @ " <> path)] <=> hBorder <=>
   (responseCodesWidget stats <+>
    vBorder <+> cacheHitWidget stats <+> vBorder <+> topDomainsWidget stats) <=>
   hBorder <=>
-  topUrlsWidget stats
+  topUrlsWidget stats <=>
+  hBorder <=>
+  responseTimesWidget stats
 
 
 app :: FilePath -> App Stats Update ()

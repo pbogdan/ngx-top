@@ -10,5 +10,5 @@ data Stats = Stats
   , responseCodes :: !(IntMap Int)
   , domains :: HashMap ByteString Int
   , urls :: HashMap ByteString Int
-  , responseTimes :: HashMap ByteString Int
+  , responseTimes :: HashMap ByteString (Int, Double)
   } deriving (Eq, Show)
