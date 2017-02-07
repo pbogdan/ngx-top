@@ -23,9 +23,15 @@ pad n x xs
 responseCodesWidget :: Stats -> Widget ()
 responseCodesWidget stats =
   let codes = responseCodes stats
+      total = cacheHitCount stats + cacheMissCount stats
       lines =
         map
-          (\(code, count) -> str (pad 15 ' ' (show code <> ": " <> show count)))
+          (\(code, count) ->
+             str
+               ((pad 15 ' ' (show code <> ": " <> show count)) <>
+                (show
+                   (round' (fromIntegral (count * 100) / fromIntegral total) 1) <>
+                 "%")))
           (IntMap.toAscList codes)
   in padLeft (Pad 1) $
      padRight (Pad 1) (str "Response codes:" <=> str " " <=> vBox lines)
