@@ -111,92 +111,32 @@ failEither
 failEither (Right x) = return x
 failEither (Left e) = fail . show $ e
 
+header :: Parser (Double -> AccessLogEntry)
+header =
+  AccessLogEntry <$> ((failEither =<< readEither . toS <$> plainValue) <?> "ip") <*>
+  (space *> plainValue <?> "iden") <*>
+  (space *> plainValue <?> "user") <*>
+  (space *>
+   (parseTimeM True defaultTimeLocale "%d/%h/%Y:%H:%M:%S %z" . toS =<<
+    bracketedValue)) <*>
+  (space *> plainValue <?> "host") <*>
+  (space *> inQuotes requestLine <?> "request line") <*>
+  (space *> decimal <?> "status") <*>
+  (space *> decimal <?> "bytes") <*>
+  ((space *> quotedValue <?> "user agent") *> space *>
+   plainValue <?> "cache status") <*>
+  (space *> plainValue <?> "cache config")
+
 accessLogEntry :: Parser AccessLogEntry
-accessLogEntry = do
-  ip <- (failEither =<< readEither . toS <$> plainValue) <?> "ip"
-  _ <- space
-  iden <- plainValue
-  _ <- space
-  user <- plainValue
-  _ <- space
-  date <-
-    parseTimeM True defaultTimeLocale "%d/%h/%Y:%H:%M:%S %z" . toS =<<
-    bracketedValue
-  _ <- space
-  host <- plainValue
-  _ <- space
-  request <- inQuotes requestLine
-  _ <- space
-  status <- decimal <?> "status"
-  _ <- space
-  bytes <- decimal
-  _ <- space
-  _ <- quotedValue -- user agent
-  _ <- space
-  cacheStatus <- plainValue
-  _ <- space
-  cacheConfig <- plainValue
-  _ <- space
-  responseTime <- double <?> "responseTime"
-  return $
-    AccessLogEntry
-      ip
-      iden
-      user
-      date
-      host
-      request
-      status
-      bytes
-      cacheStatus
-      cacheConfig
-      responseTime
+accessLogEntry = header <*> (space *> double) <?> "response time"
 
 rpcAccessLogEntry :: Parser AccessLogEntry
-rpcAccessLogEntry = do
-  ip <- (failEither =<< readEither . toS <$> plainValue) <?> "ip"
-  _ <- space
-  iden <- plainValue
-  _ <- space
-  user <- plainValue
-  _ <- space
-  date <-
-    parseTimeM True defaultTimeLocale "%d/%h/%Y:%H:%M:%S %z" . toS =<<
-    bracketedValue
-  _ <- space
-  host <- plainValue
-  _ <- space
-  request <- inQuotes requestLine
-  _ <- space
-  status <- decimal <?> "status"
-  _ <- space
-  bytes <- decimal
-  _ <- space
-  _ <- quotedValue -- user agent
-  _ <- space
-  cacheStatus <- plainValue <?> "cache status"
-  _ <- space
-  cacheConfig <- plainValue <?> "cache config"
-  _ <- space
-  _ <- string "rpc@"
-  _rpcMethod <- plainValue <?> "rpc method"
-  _ <- space
-  _rpcLogin <- plainValue <?> "rpc login"
-  _ <- space
-  responseTime <- double <?> "responseTime"
-  return $
-    AccessLogEntry
-      ip
-      iden
-      user
-      date
-      host
-      request
-      status
-      bytes
-      cacheStatus
-      cacheConfig
-      responseTime
+rpcAccessLogEntry =
+  header <*>
+  ((space *> string "rpc@" *> (plainValue <?> "rpc method") *> space *>
+    plainValue <?> "rpc login") *>
+   space *>
+   double <?> "response time")
 
 lbsParseAccessLogEntry :: LazyBytes.ByteString -> Either Text AccessLogEntry
 lbsParseAccessLogEntry s =
