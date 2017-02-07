@@ -23,7 +23,7 @@ import           URI.ByteString
 run :: FilePath -> IO ()
 run path = do
   let initialStats =
-        Stats 0 0 IntMap.empty HashMap.empty HashMap.empty HashMap.empty
+        Stats 0 0 IntMap.empty HashMap.empty HashMap.empty HashMap.empty 0
   stats <- atomically $ newTVar initialStats
   eventChan <- newBChan 10
   a <- async $ void $ tailFile path (updateStats stats)
