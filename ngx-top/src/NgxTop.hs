@@ -15,7 +15,7 @@ import qualified Data.HashMap.Strict as HashMap
 import           Data.IP
 import qualified Data.IntMap.Strict as IntMap
 import           Graphics.Vty
-import           Log.Nginx
+import           Log.Nginx.Gateway
 import           NgxTop.UI
 import           Pipes hiding (for)
 import qualified Pipes.ByteString as PB

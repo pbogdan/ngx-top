@@ -4,7 +4,7 @@
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module NginxSpec
+module Nginx.GatewaySpec
   ( main
   , spec
   )
@@ -17,7 +17,7 @@ import qualified Data.ByteString as Bytes
 import           Data.IP
 import           Data.String
 import           Data.Time
-import           Log.Nginx
+import           Log.Nginx.Gateway
 import           Test.Hspec
 import           Test.QuickCheck
 import           Test.QuickCheck.Instances ()

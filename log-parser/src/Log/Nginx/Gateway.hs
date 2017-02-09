@@ -2,7 +2,7 @@
 
 {-# OPTIONS_GHC -funbox-strict-fields #-}
 
-module Log.Nginx
+module Log.Nginx.Gateway
   ( lbsParseAccessLogEntry
   , parseAccessLogEntry
   , accessLogEntry
