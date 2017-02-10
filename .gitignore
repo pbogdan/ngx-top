@@ -24,3 +24,4 @@ dist-*
 TAGS
 *.ps
 /build/ngx-top
+/build/ngx-top-gen
