@@ -21,6 +21,7 @@ library
     exposed-modules:
         Log.Nginx.Combined
         Log.Nginx.Common
+        Log.Nginx.Detect
         Log.Nginx.Gateway
         Log.Nginx.Pretty
         Log.Nginx.Types

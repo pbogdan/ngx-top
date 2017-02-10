@@ -4,19 +4,22 @@ module NgxTop
   ( run
   ) where
 
-import           Protolude hiding ((&))
+import           Protolude hiding ((&), try)
 
 import           Brick.BChan
 import           Brick.Main
 import           Control.Concurrent.STM.TVar
+import           Control.Exception.Safe
 import qualified Control.Foldl as Fold
 import           Control.Lens hiding (lined)
+import qualified Data.ByteString as Bytes
 import           Data.GeoIP2
 import qualified Data.HashMap.Strict as HashMap
 import           Data.IP
 import qualified Data.IntMap.Strict as IntMap
 import           GeoIP
 import           Graphics.Vty
+import           Log.Nginx.Detect
 import           Log.Nginx.Gateway
 import           Log.Nginx.Types
 import           NgxTop.UI
@@ -29,6 +32,16 @@ import           URI.ByteString
 
 run :: FilePath -> IO ()
 run path = do
+  line <-
+    try
+      (evaluate =<<
+       (do h <- openFile path ReadMode
+           Bytes.hGetLine h))
+  let parser =
+        case detect <$> line of
+          Left (e :: SomeException) -> parseGateway
+          Right (Just x) -> x
+          _ -> parseGateway
   db <- openGeoDBBS geoIPDB
   let initialStats =
         Stats
@@ -45,7 +58,7 @@ run path = do
           db
   stats <- atomically $ newTVar initialStats
   eventChan <- newBChan 10
-  a <- async $ void $ tailFile path (updateStats stats)
+  a <- async $ void $ tailFile path (updateStats stats parser)
   b <-
     async $
     void $ do
@@ -79,21 +92,25 @@ lined p = Fold.purely PG.folds Fold.mconcat (view PB.lines p)
 
 parseLine
   :: Monad m
-  => Pipes.Proxy () ByteString () AccessLogEntry m b
-parseLine =
+  => (ByteString -> Either Text AccessLogEntry)
+  -> Pipes.Proxy () ByteString () AccessLogEntry m b
+parseLine parser =
   forever $ do
     x <- await
-    case parseGateway x of
+    case parser x of
       Right l -> yield l
       Left _ -> return ()
 
 updateStats
   :: MonadIO m
-  => TVar Stats -> Producer ByteString m r -> m (void, r)
-updateStats stats p = do
+  => TVar Stats
+  -> (ByteString -> Either Text AccessLogEntry)
+  -> Producer ByteString m r
+  -> m (void, r)
+updateStats stats parser p = do
   _ <-
     runEffect $
-    (p & lined) >-> parseLine >->
+    (p & lined) >-> parseLine parser >->
     forever
       (do x <- await
           liftIO . atomically $
