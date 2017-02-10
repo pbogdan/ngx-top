@@ -4,7 +4,7 @@
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Nginx.GatewaySpec
+module Nginx.CombinedSpec
   ( main
   , spec
   )
@@ -17,7 +17,7 @@ import qualified Data.ByteString as Bytes
 import           Data.IP
 import           Data.String
 import           Data.Time
-import           Log.Nginx.Gateway
+import           Log.Nginx.Combined
 import           Log.Nginx.Types
 import           Test.Hspec
 import           Test.QuickCheck
@@ -39,18 +39,8 @@ instance Arbitrary IPv4 where
     return $ read ipString
 
 instance Arbitrary CacheStatus where
-  arbitrary =
-    oneof
-      [ pure MISS
-      , pure BYPASS
-      , pure EXPIRED
-      , pure STALE
-      , pure UPDATING
-      , pure REVALIDATED
-      , pure HIT
-      , pure SCARCE
-      , pure UNKNOWN
-      ]
+  arbitrary = pure MISS
+
 instance Arbitrary (URIRef Relative) where
   arbitrary =
     RelativeRef <$> pure Nothing <*>
@@ -90,12 +80,12 @@ instance Arbitrary AccessLogEntry where
     arbitrary <*>
     arbitrary `suchThat` (\x -> x > 100 && x < 999) <*>
     arbitrary `suchThat` (\x -> x > 100 && x < 999) <*>
-    pure Nothing <*>
+    (fmap (Just . toS) <$> listOf . elements $ (['a' .. 'z'] ++ ['.'])) <*>
     ((fmap toS <$> listOf . elements $ (['a' .. 'z'] ++ ['-'])) `suchThat`
      ((> 0) . Bytes.length)) <*>
     arbitrary <*>
-    oneof [pure "0", pure "1"] <*>
-    (getPositive <$> arbitrary)
+    oneof [pure "0"] <*>
+    pure 0
 
 main :: IO ()
 main = hspec spec
@@ -104,6 +94,6 @@ main = hspec spec
 spec :: Spec
 spec =
   describe "For trivial valid input" $ do
-    it "parseGateway . toLogLine == id" $
+    it "parseCombined . toLogLine == id" $
       property $ \(entry :: AccessLogEntry) ->
-        Right entry `shouldBe` parseGateway (toLogLine entry)
+        Right entry `shouldBe` parseCombined (toLogLine entry)

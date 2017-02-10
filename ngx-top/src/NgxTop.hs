@@ -18,6 +18,7 @@ import qualified Data.IntMap.Strict as IntMap
 import           GeoIP
 import           Graphics.Vty
 import           Log.Nginx.Gateway
+import           Log.Nginx.Types
 import           NgxTop.UI
 import           Pipes hiding (for)
 import qualified Pipes.ByteString as PB
@@ -82,7 +83,7 @@ parseLine
 parseLine =
   forever $ do
     x <- await
-    case parseAccessLogEntry x of
+    case parseGateway x of
       Right l -> yield l
       Left _ -> return ()
 
