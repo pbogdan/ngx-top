@@ -11,6 +11,7 @@ import           Protolude hiding ((&))
 import           Brick hiding (on)
 import           Brick.Widgets.Border
 import           Control.Lens
+import           Data.GeoIP2
 import qualified Data.HashMap.Strict as HashMap
 import           Data.IP
 import qualified Data.IntMap as IntMap
@@ -128,7 +129,15 @@ topIPWidget stats =
       topIPs' =
         map
           (\(ip, count) ->
-             str (pad 16 ' ' (show . toIPv4 $ ip) <> ": " <> show count))
+             str
+               (pad 16 ' ' (show . toIPv4 $ ip) <> "(" <>
+                toS
+                  (either (const "") (fromMaybe "") $
+                   geoCountryISO <$>
+                   findGeoData (stats ^. geoDB) "en" (IPv4 . toIPv4 $ ip)) <>
+                ")" <>
+                ": " <>
+                show count))
           topIPs
   in padLeft (Pad 1) $
      padRight (Pad 1) $

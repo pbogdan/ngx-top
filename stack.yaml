@@ -38,6 +38,10 @@ resolver: nightly-2017-01-31
 packages:
 - './ngx-top/'
 - './log-parser/'
+- location:
+    git: https://github.com/pbogdan/geoip2
+    commit: 61c5942c262318dc6e548305e4faf696dac23a63
+  extra-dep: true
 
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)

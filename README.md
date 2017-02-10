@@ -30,3 +30,7 @@ ngx-top logfile
 
 Using Intel(R) Core(TM) i7-5500U CPU @ 2.40GHz ngx-top can currently process approximately 17000 log lines per second. Memory usage will vary depending on the log file, no extensive testing has been performed yet to determine accurate figures.
 It's important to note that due to continuous processing memory usage will constantly grow overtime, to prevent an unintentional memory exhaustion ngx-top will exit when total memory usage reaches 256 MB.
+
+---
+
+This project includes GeoLite2 data created by MaxMind, available from [www.maxmind.com](http://www.maxmind.com).

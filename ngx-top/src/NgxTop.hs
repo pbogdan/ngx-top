@@ -9,11 +9,13 @@ import           Protolude hiding ((&))
 import           Brick.BChan
 import           Brick.Main
 import           Control.Concurrent.STM.TVar
-import           Control.Lens hiding (lined)
 import qualified Control.Foldl as Fold
+import           Control.Lens hiding (lined)
+import           Data.GeoIP2
 import qualified Data.HashMap.Strict as HashMap
 import           Data.IP
 import qualified Data.IntMap.Strict as IntMap
+import           GeoIP
 import           Graphics.Vty
 import           Log.Nginx.Gateway
 import           NgxTop.UI
@@ -26,6 +28,7 @@ import           URI.ByteString
 
 run :: FilePath -> IO ()
 run path = do
+  db <- openGeoDBBS geoIPDB
   let initialStats =
         Stats
           0
@@ -38,6 +41,7 @@ run path = do
           0
           HashMap.empty
           0
+          db
   stats <- atomically $ newTVar initialStats
   eventChan <- newBChan 10
   a <- async $ void $ tailFile path (updateStats stats)

@@ -15,11 +15,13 @@ module Types
   , urls
   , totalRequests
   , requestsPerSecond
+  , geoDB
   ) where
 
 import Protolude hiding (to)
 
 import Control.Lens
+import Data.GeoIP2
 import Data.HashMap.Strict (HashMap)
 
 data Stats = Stats
@@ -33,7 +35,8 @@ data Stats = Stats
   , _totalBandwidth :: !Int
   , _ips :: HashMap [Int] Int
   , _updateCount :: !Int
-  } deriving (Eq, Show)
+  , _geoDB :: GeoDB
+  }
 
 $(makeLenses ''Stats)
 
