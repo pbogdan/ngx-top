@@ -15,6 +15,7 @@ import           Protolude hiding (takeWhile, try)
 
 import           Control.Monad
 import           Data.Attoparsec.ByteString.Char8
+import           Data.IP
 import           Data.Time
 import           Log.Nginx.Types
 import qualified URI.ByteString as URI
@@ -59,7 +60,7 @@ cacheStatus = do
 commonHeader
   :: Parser (Maybe ByteString -> ByteString -> CacheStatus -> ByteString -> Double -> AccessLogEntry)
 commonHeader =
-  AccessLogEntry <$> ((failEither =<< readEither . toS <$> plainValue) <?> "ip") <*>
+  AccessLogEntry <$> (toIPv4 <$> (decimal `sepBy` char '.')) <*>
   (space *> plainValue <?> "iden") <*>
   (space *> plainValue <?> "user") <*>
   (space *>
