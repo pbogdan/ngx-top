@@ -20,11 +20,34 @@ docker-compose up
 
 and the binary will be placed in the `build` folder.
 
-Statically linked binaries will be provided in the future via Release section.
+Statically linked binaries will be provided in the future via Releases section.
 
 ## Usage
 
-ngx-top logfile
+```
+$ ngx-top logfile
+```
+
+Currently ngx-top supports log files in the default combined format and a custom gateway format. At this time only the custom format contains all the required information to enable full current feature set.  
+ngx-top will attempt to automatically detect correct log file format, defaulting to gateway format if auto-detection fails for any reason.
+
+### Running a demo
+
+ngx-top-gen binary is included to generate random log lines for testing / demo purposes:
+
+```
+stack exec -- ngx-top-gen > logfile
+```
+
+This will generate approximately 100 lines per second and write them to `logfile`.
+
+And in another terminal window:
+
+```
+stack exec -- ngx-top logfile
+```
+
+`stack exec` invocations above can be replaced with usage of binaries in the build folder if docker-compose build method was used.
 
 ## Performance
 
