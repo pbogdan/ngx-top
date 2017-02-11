@@ -2,6 +2,9 @@
 
 Monitor nginx access logs in real time.
 
+![screenshot](https://raw.githubusercontent.com/pbogdan/ngx-top/master/screenshots/screenshot.png)
+
+
 ## Installation
 
 ngx-top binary can be built in two ways, either using [haskell stack tool](https://www.haskellstack.org):
