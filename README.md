@@ -4,6 +4,7 @@ Monitor nginx access logs in real time.
 
 ![screenshot](https://raw.githubusercontent.com/pbogdan/ngx-top/master/screenshots/screenshot.png)
 
+![Build status](https://travis-ci.org/pbogdan/ngx-top.svg?branch=master)
 
 ## Installation
 
