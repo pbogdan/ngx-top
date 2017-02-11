@@ -39,7 +39,7 @@ run path = do
            Bytes.hGetLine h))
   let parser =
         case detect <$> line of
-          Left (e :: SomeException) -> parseGateway
+          Left (_ :: SomeException) -> parseGateway
           Right (Just x) -> x
           _ -> parseGateway
   db <- openGeoDBBS geoIPDB
@@ -64,7 +64,7 @@ run path = do
     void $ do
       _ <-
         customMain
-          (mkVty defaultConfig)
+          (mkVty defaultConfig {termName = Nothing})
           (Just eventChan)
           (app path)
           initialStats
@@ -117,23 +117,23 @@ updateStats stats parser p = do
             modifyTVar' stats $ \current ->
               current & cacheHitCount .~
               (if aleCacheStatus x == HIT
-                 then succ (current ^. cacheHitCount)
+                 then current ^. cacheHitCount <> 1
                  else current ^. cacheHitCount) &
               cacheMissCount .~
               (if aleCacheStatus x /= HIT
-                 then succ (current ^. cacheMissCount)
+                 then current ^. cacheMissCount <> 1
                  else current ^. cacheMissCount) &
               responseCodes .~
               IntMap.insertWith
-                (+)
+                (<>)
                 (aleResponseCode x)
                 1
                 (current ^. responseCodes) &
               domains .~
-              HashMap.insertWith (+) (aleHost x) 1 (current ^. domains) &
+              HashMap.insertWith (<>) (aleHost x) 1 (current ^. domains) &
               urls .~
               HashMap.insertWith
-                (+)
+                (<>)
                 (aleHost x <> rrPath (requestUri $ aleRequest x))
                 1
                 (current ^. urls) &
@@ -148,10 +148,11 @@ updateStats stats parser p = do
               responseTime .~
               (if aleCacheStatus x == HIT
                  then current ^. responseTime
-                 else current ^. responseTime + aleResponseTime x) &
+                 else current ^. responseTime <> (Sum . aleResponseTime $ x)) &
               totalBandwidth .~
               current ^.
-              totalBandwidth +
-              aleResponseSize x & ips .~
-              HashMap.insertWith (+) (fromIPv4 . aleIP $ x) 1 (current ^. ips))
+              totalBandwidth <>
+              Sum (aleResponseSize x) &
+              ips .~
+              HashMap.insertWith (<>) (fromIPv4 . aleIP $ x) 1 (current ^. ips))
   return (undefined :: void, undefined :: r)

@@ -33,9 +33,11 @@ responseCodesWidget stats =
         map
           (\(code, count) ->
              str
-               (pad 15 ' ' (show code <> ": " <> show count) <>
+               (pad 15 ' ' (show code <> ": " <> (show . getSum $ count)) <>
                 (show
-                   (round' (fromIntegral (count * 100) / fromIntegral total) 1) <>
+                   (round'
+                      (fromIntegral (getSum (count * 100)) / fromIntegral total)
+                      1) <>
                  "%")))
           (IntMap.toAscList codes)
   in padLeft (Pad 1) $
@@ -47,15 +49,17 @@ cacheHitWidget :: Stats -> Widget ()
 cacheHitWidget stats =
   let total = stats ^. totalRequests
       (hitRatio :: Double) =
-        fromIntegral (stats ^. cacheHitCount * 100) / fromIntegral total
+        fromIntegral (getSum (stats ^. cacheHitCount) * 100) /
+        fromIntegral total
       (missRatio :: Double) =
-        fromIntegral (stats ^. cacheMissCount * 100) / fromIntegral total
+        fromIntegral (getSum (stats ^. cacheMissCount) * 100) /
+        fromIntegral total
   in padLeft (Pad 1) $
      padRight (Pad 1) $
      withAttr "bold" (str "Requests:") <=> str " " <=>
      str ("Total requests: " <> show total) <=>
-     str ("Cache hits: " <> show (stats ^. cacheHitCount)) <=>
-     str ("Cache misses: " <> show (stats ^. cacheMissCount)) <=>
+     str ("Cache hits: " <> (show . getSum $ stats ^. cacheHitCount)) <=>
+     str ("Cache misses: " <> (show . getSum $ stats ^. cacheMissCount)) <=>
      str
        ("Cache hit ratio: " <> show (round hitRatio :: Integer) <> " / " <>
         show (round missRatio :: Integer)) <=>
@@ -64,13 +68,14 @@ cacheHitWidget stats =
        ("Avg. rq time: " <>
         show
           (round'
-             (stats ^. responseTime / fromIntegral (stats ^. cacheMissCount))
+             (getSum (stats ^. responseTime) /
+              fromIntegral (getSum (stats ^. cacheMissCount)))
              2)) <=>
      str
        ("Total bandwidth: " <>
         show
           (round
-             (fromIntegral (stats ^. totalBandwidth) / 1024 / 1024 :: Double) :: Integer))
+             (fromIntegral (getSum (stats ^. totalBandwidth)) / 1024 / 1024 :: Double) :: Integer))
 
 topDomainsWidget :: Stats -> Widget ()
 topDomainsWidget stats =
@@ -80,7 +85,9 @@ topDomainsWidget stats =
       topDomains' =
         map
           (\(domain, count) ->
-             str (pad 30 ' ' (toS (decodeUtf8 domain)) <> ": " <> show count))
+             str
+               (pad 30 ' ' (toS (decodeUtf8 domain)) <> ": " <>
+                (show . getSum $ count)))
           topDomains
   in padLeft (Pad 1) $
      padRight (Pad 1) $
@@ -94,7 +101,9 @@ topUrlsWidget stats =
       topUrls' =
         map
           (\(domain, count) ->
-             str (pad 80 ' ' (toS (decodeUtf8 domain)) <> ": " <> show count))
+             str
+               (pad 80 ' ' (toS (decodeUtf8 domain)) <> ": " <>
+                (show . getSum $ count)))
           topUrls
   in padLeft (Pad 1) $
      padRight (Pad 1) $
@@ -137,7 +146,7 @@ topIPWidget stats =
                    findGeoData (stats ^. geoDB) "en" (IPv4 . toIPv4 $ ip)) <>
                 ")" <>
                 ": " <>
-                show count))
+                (show . getSum $ count)))
           topIPs
   in padLeft (Pad 1) $
      padRight (Pad 1) $

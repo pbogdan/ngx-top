@@ -25,15 +25,15 @@ import Data.GeoIP2
 import Data.HashMap.Strict (HashMap)
 
 data Stats = Stats
-  { _cacheHitCount :: !Int
-  , _cacheMissCount :: !Int
-  , _responseCodes :: !(IntMap Int)
-  , _domains :: HashMap ByteString Int
-  , _urls :: HashMap ByteString Int
+  { _cacheHitCount :: !(Sum Int)
+  , _cacheMissCount :: !(Sum Int)
+  , _responseCodes :: !(IntMap (Sum Int))
+  , _domains :: HashMap ByteString (Sum Int)
+  , _urls :: HashMap ByteString (Sum Int)
   , _responseTimes :: HashMap ByteString (Int, Double)
-  , _responseTime :: !Double
-  , _totalBandwidth :: !Int
-  , _ips :: HashMap [Int] Int
+  , _responseTime :: !(Sum Double)
+  , _totalBandwidth :: !(Sum Int)
+  , _ips :: HashMap [Int] (Sum Int)
   , _updateCount :: !Int
   , _geoDB :: GeoDB
   }
@@ -41,7 +41,8 @@ data Stats = Stats
 $(makeLenses ''Stats)
 
 totalRequests :: Getter Stats Int
-totalRequests = to (\stats -> stats ^. cacheHitCount + stats ^. cacheMissCount)
+totalRequests =
+  to (\stats -> getSum (stats ^. cacheHitCount <> stats ^. cacheMissCount))
 
 requestsPerSecond :: Getter Stats Double
 requestsPerSecond =
