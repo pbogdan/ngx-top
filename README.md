@@ -24,7 +24,7 @@ docker-compose up
 
 and the binary will be placed in the `build` folder.
 
-Statically linked binaries will be provided in the future via Releases section.
+Statically and dynamically linked binaries are now available via Releases section.
 
 ## Usage
 
