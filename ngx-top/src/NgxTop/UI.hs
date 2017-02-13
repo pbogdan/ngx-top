@@ -15,7 +15,7 @@ import           Data.GeoIP2
 import qualified Data.HashMap.Strict as HashMap
 import           Data.IP
 import qualified Data.IntMap as IntMap
-import           Graphics.Vty.Attributes
+import           Graphics.Vty hiding (pad)
 import           Types
 
 pad
@@ -25,6 +25,21 @@ pad n x xs
   | textWidth xs >= n = xs
   | otherwise = xs ++ replicate (n - textWidth xs) x
 
+responseCodeColor
+  :: (Ord a, Num a, IsString t)
+  => a -> t
+responseCodeColor n
+  | n >= 200 && n < 300 = "ok"
+  | n >= 400 && n < 500 = "warning"
+  | n >= 500 && n < 600 = "error"
+  | otherwise = "black"
+
+heading :: Int -> [Char] -> Widget n
+heading n title =
+  hLimit n $
+  vLimit 1 (withAttr "header" $ str (pad n ' ' (" " <> title)) <=> fill ' ') <=>
+  str " "
+
 responseCodesWidget :: Stats -> Widget ()
 responseCodesWidget stats =
   let codes = stats ^. responseCodes
@@ -32,18 +47,16 @@ responseCodesWidget stats =
       lines =
         map
           (\(code, count) ->
+             withAttr (responseCodeColor code) $
              str
-               (pad 15 ' ' (show code <> ": " <> (show . getSum $ count)) <>
+               (pad 15 ' ' (" " <> show code <> ": " <> (show . getSum $ count)) <>
                 (show
                    (round'
                       (fromIntegral (getSum (count * 100)) / fromIntegral total)
                       1) <>
                  "%")))
           (IntMap.toAscList codes)
-  in padLeft (Pad 1) $
-     padRight
-       (Pad 1)
-       (withAttr "bold" (str "Response codes:") <=> str " " <=> vBox lines)
+  in heading 30 "Response codes" <=> vBox lines
 
 cacheHitWidget :: Stats -> Widget ()
 cacheHitWidget stats =
@@ -54,28 +67,33 @@ cacheHitWidget stats =
       (missRatio :: Double) =
         fromIntegral (getSum (stats ^. cacheMissCount) * 100) /
         fromIntegral total
-  in padLeft (Pad 1) $
-     padRight (Pad 1) $
-     withAttr "bold" (str "Requests:") <=> str " " <=>
-     str ("Total requests: " <> show total) <=>
-     str ("Cache hits: " <> (show . getSum $ stats ^. cacheHitCount)) <=>
-     str ("Cache misses: " <> (show . getSum $ stats ^. cacheMissCount)) <=>
+  in heading 30 "Requests" <=> str (" Total requests: " <> show total) <=>
+     str (" Cache hits: " <> (show . getSum $ stats ^. cacheHitCount)) <=>
+     str (" Cache misses: " <> (show . getSum $ stats ^. cacheMissCount)) <=>
      str
-       ("Cache hit ratio: " <> show (round hitRatio :: Integer) <> " / " <>
+       (" Cache hit ratio: " <> show (round hitRatio :: Integer) <> " / " <>
         show (round missRatio :: Integer)) <=>
-     str ("Avg. rq / s: " <> show (round' (stats ^. requestsPerSecond) 2)) <=>
+     str (" Avg. rq / s: " <> show (round' (stats ^. requestsPerSecond) 2)) <=>
      str
-       ("Avg. rq time: " <>
+       (" Avg. rq time: " <>
         show
           (round'
              (getSum (stats ^. responseTime) /
               fromIntegral (getSum (stats ^. cacheMissCount)))
              2)) <=>
      str
-       ("Total bandwidth: " <>
+       (" Total Bandwidth: " <>
         show
           (round
-             (fromIntegral (getSum (stats ^. totalBandwidth)) / 1024 / 1024 :: Double) :: Integer))
+             (fromIntegral (getSum (stats ^. totalBandwidth)) / 1024 / 1024 :: Double) :: Integer) <>
+        " MB") <=>
+     str
+       (" Bandwidth / s: " <>
+        show
+          (round
+             (fromIntegral (getSum (stats ^. totalBandwidth)) / 1024 / 1024 /
+              fromIntegral (stats ^. updateCount) :: Double) :: Integer) <>
+        " MB")
 
 topDomainsWidget :: Stats -> Widget ()
 topDomainsWidget stats =
@@ -86,34 +104,29 @@ topDomainsWidget stats =
         map
           (\(domain, count) ->
              str
-               (pad 30 ' ' (toS (decodeUtf8 domain)) <> ": " <>
+               (" " <> pad 30 ' ' (toS (decodeUtf8 domain)) <> ": " <>
                 (show . getSum $ count)))
           topDomains
-  in padLeft (Pad 1) $
-     padRight (Pad 1) $
-     withAttr "bold" (str "Top domains:") <=> str " " <=> vBox topDomains'
+  in heading 2000 "Top domains" <=> vBox topDomains'
 
 topUrlsWidget :: Stats -> Widget ()
 topUrlsWidget stats =
   let topUrls =
-        take 10 $
+        take 15 $
         sortBy (flip compare `on` snd) $ HashMap.toList (stats ^. urls)
       topUrls' =
         map
           (\(domain, count) ->
              str
-               (pad 80 ' ' (toS (decodeUtf8 domain)) <> ": " <>
+               (" " <> pad 80 ' ' (toS (decodeUtf8 domain)) <> ": " <>
                 (show . getSum $ count)))
           topUrls
-  in padLeft (Pad 1) $
-     padRight (Pad 1) $
-     withAttr "bold" (str "Top urls by number of requests:") <=> str " " <=>
-     vBox topUrls'
+  in heading 2000 "Top urls by number of requests" <=> vBox topUrls'
 
 responseTimesWidget :: Stats -> Widget ()
 responseTimesWidget stats =
   let topUrls =
-        take 10 $
+        take 15 $
         sortBy
           (\(_, (a, b)) (_, (c, d)) ->
              compare (d / fromIntegral c) (b / fromIntegral a)) $
@@ -122,14 +135,11 @@ responseTimesWidget stats =
         map
           (\(url, (count, time)) ->
              str
-               (pad 80 ' ' (toS (decodeUtf8 url)) <> ": " <>
+               (" " <> pad 80 ' ' (toS (decodeUtf8 url)) <> ": " <>
                 show
                   (round' (time / fromIntegral count) (2 :: Integer) :: Double)))
           topUrls
-  in padLeft (Pad 1) $
-     padRight (Pad 1) $
-     withAttr "bold" (str "Top MISS urls by average response time:") <=> str " " <=>
-     vBox lines
+  in heading 2000 "Top MISS urls by average response time" <=> vBox lines
 
 topIPWidget :: Stats -> Widget ()
 topIPWidget stats =
@@ -139,7 +149,7 @@ topIPWidget stats =
         map
           (\(ip, count) ->
              str
-               (pad 16 ' ' (show . toIPv4 $ ip) <> "(" <>
+               (" " <> pad 16 ' ' (show . toIPv4 $ ip) <> "(" <>
                 toS
                   (either (const "") (fromMaybe "") $
                    geoCountryISO <$>
@@ -148,10 +158,7 @@ topIPWidget stats =
                 ": " <>
                 (show . getSum $ count)))
           topIPs
-  in padLeft (Pad 1) $
-     padRight (Pad 1) $
-     withAttr "bold" (str "Top ips by number of requests:") <=> str " " <=>
-     vBox topIPs'
+  in heading 30 "Top IP addresses" <=> vBox topIPs'
 
 round'
   ::  Double -> Integer -> Double
@@ -163,12 +170,10 @@ ui path stats =
   hBox [padLeft (Pad 1) $ padRight (Pad 1) $str ("ngx-top @ " <> path)] <=>
   hBorder <=>
   (responseCodesWidget stats <+>
-   vBorder <+>
-   cacheHitWidget stats <+>
-   vBorder <+> topDomainsWidget stats <+> vBorder <+> topIPWidget stats) <=>
-  hBorder <=>
+   cacheHitWidget stats <+> topIPWidget stats <+> topDomainsWidget stats) <=>
+  str " " <=>
   topUrlsWidget stats <=>
-  hBorder <=>
+  str " " <=>
   responseTimesWidget stats
 
 
@@ -180,7 +185,14 @@ app path =
   , appStartEvent = return
   , appAttrMap =
       const $
-      attrMap defAttr [(attrName "bold", Attr (SetTo bold) Default Default)]
+      attrMap
+        defAttr
+        [ (attrName "bold", Attr (SetTo bold) Default Default)
+        , (attrName "ok", fg green)
+        , (attrName "warning", fg yellow)
+        , (attrName "error", fg red)
+        , (attrName "header", Attr Default (SetTo brightWhite) (SetTo green))
+        ]
   , appChooseCursor = neverShowCursor
   }
 
