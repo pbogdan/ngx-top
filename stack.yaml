@@ -38,16 +38,13 @@ resolver: nightly-2017-01-31
 packages:
 - './ngx-top/'
 - './log-parser/'
-- location:
-    git: https://github.com/pbogdan/geoip2
-    commit: 61c5942c262318dc6e548305e4faf696dac23a63
-  extra-dep: true
 
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
 extra-deps:
   - tailfile-hinotify-1.0.0.2
   - streaming-eversion-0.3.1.0
+  - geoip2-0.2.2.0
 # Override default flag values for local packages and extra-deps
 flags: {}
 
