@@ -16,6 +16,8 @@ module Types
   , totalRequests
   , requestsPerSecond
   , geoDB
+  , botsCache
+  , bots
   ) where
 
 import Protolude hiding (to)
@@ -36,6 +38,8 @@ data Stats = Stats
   , _ips :: HashMap [Int] (Sum Int)
   , _updateCount :: !Int
   , _geoDB :: GeoDB
+  , _botsCache :: HashMap ByteString (Maybe ByteString)
+  , _bots :: HashMap ByteString (Sum Int)
   }
 
 $(makeLenses ''Stats)

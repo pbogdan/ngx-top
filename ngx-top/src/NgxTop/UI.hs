@@ -112,7 +112,7 @@ topDomainsWidget stats =
 topUrlsWidget :: Stats -> Widget ()
 topUrlsWidget stats =
   let topUrls =
-        take 15 $
+        take 10 $
         sortBy (flip compare `on` snd) $ HashMap.toList (stats ^. urls)
       topUrls' =
         map
@@ -126,7 +126,7 @@ topUrlsWidget stats =
 responseTimesWidget :: Stats -> Widget ()
 responseTimesWidget stats =
   let topUrls =
-        take 15 $
+        take 10 $
         sortBy
           (\(_, (a, b)) (_, (c, d)) ->
              compare (d / fromIntegral c) (b / fromIntegral a)) $
@@ -140,6 +140,21 @@ responseTimesWidget stats =
                   (round' (time / fromIntegral count) (2 :: Integer) :: Double)))
           topUrls
   in heading 2000 "Top MISS urls by average response time" <=> vBox lines
+
+topBotsWidget :: Stats -> Widget ()
+topBotsWidget stats =
+  let topBots =
+        take 10 $
+        sortBy (flip compare `on` snd) $ HashMap.toList (stats ^. bots)
+      topBots' =
+        map
+          (\(ua, count) ->
+             str
+               (" " <> pad 80 ' ' (toS (decodeUtf8 ua)) <> ": " <>
+                (show . getSum $ count)))
+          topBots
+  in heading 2000 "Top known bots by number of requests" <=> vBox topBots'
+
 
 topIPWidget :: Stats -> Widget ()
 topIPWidget stats =
@@ -174,8 +189,9 @@ ui path stats =
   str " " <=>
   topUrlsWidget stats <=>
   str " " <=>
-  responseTimesWidget stats
-
+  responseTimesWidget stats <=>
+  str " " <=>
+  topBotsWidget stats
 
 app :: FilePath -> App Stats Update ()
 app path =

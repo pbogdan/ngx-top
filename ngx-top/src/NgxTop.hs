@@ -22,6 +22,7 @@ import           Graphics.Vty
 import           Log.Nginx.Detect
 import           Log.Nginx.Gateway
 import           Log.Nginx.Types
+import           NgxTop.Bots
 import           NgxTop.UI
 import           Pipes hiding (for)
 import qualified Pipes.ByteString as PB
@@ -56,6 +57,8 @@ run path = do
           HashMap.empty
           0
           db
+          HashMap.empty
+          HashMap.empty
   stats <- atomically $ newTVar initialStats
   eventChan <- newBChan 10
   a <- async $ void $ tailFile path (updateStats stats parser)
@@ -115,44 +118,62 @@ updateStats stats parser p = do
       (do x <- await
           liftIO . atomically $
             modifyTVar' stats $ \current ->
-              current & cacheHitCount .~
-              (if aleCacheStatus x == HIT
-                 then current ^. cacheHitCount <> 1
-                 else current ^. cacheHitCount) &
-              cacheMissCount .~
-              (if aleCacheStatus x /= HIT
-                 then current ^. cacheMissCount <> 1
-                 else current ^. cacheMissCount) &
-              responseCodes .~
-              IntMap.insertWith
-                (<>)
-                (aleResponseCode x)
-                1
-                (current ^. responseCodes) &
-              domains .~
-              HashMap.insertWith (<>) (aleHost x) 1 (current ^. domains) &
-              urls .~
-              HashMap.insertWith
-                (<>)
-                (aleHost x <> rrPath (requestUri $ aleRequest x))
-                1
-                (current ^. urls) &
-              responseTimes .~
-              (if aleCacheStatus x == HIT
-                 then current ^. responseTimes
-                 else HashMap.insertWith
-                        (\(a, b) (c, d) -> (a + c, b + d))
-                        (aleHost x <> rrPath (requestUri $ aleRequest x))
-                        (1, aleResponseTime x)
-                        (current ^. responseTimes)) &
-              responseTime .~
-              (if aleCacheStatus x == HIT
-                 then current ^. responseTime
-                 else current ^. responseTime <> (Sum . aleResponseTime $ x)) &
-              totalBandwidth .~
-              current ^.
-              totalBandwidth <>
-              Sum (aleResponseSize x) &
-              ips .~
-              HashMap.insertWith (<>) (fromIPv4 . aleIP $ x) 1 (current ^. ips))
+              let newBotsCache =
+                    case HashMap.lookup (aleUserAgent x) (current ^. botsCache) of
+                      Nothing ->
+                        HashMap.insert
+                          (aleUserAgent x)
+                          (isBot (aleUserAgent x))
+                          (current ^. botsCache)
+                      Just _ -> current ^. botsCache
+              in current & cacheHitCount .~
+                 (if aleCacheStatus x == HIT
+                    then current ^. cacheHitCount <> 1
+                    else current ^. cacheHitCount) &
+                 cacheMissCount .~
+                 (if aleCacheStatus x /= HIT
+                    then current ^. cacheMissCount <> 1
+                    else current ^. cacheMissCount) &
+                 responseCodes .~
+                 IntMap.insertWith
+                   (<>)
+                   (aleResponseCode x)
+                   1
+                   (current ^. responseCodes) &
+                 domains .~
+                 HashMap.insertWith (<>) (aleHost x) 1 (current ^. domains) &
+                 urls .~
+                 HashMap.insertWith
+                   (<>)
+                   (aleHost x <> rrPath (requestUri $ aleRequest x))
+                   1
+                   (current ^. urls) &
+                 responseTimes .~
+                 (if aleCacheStatus x == HIT
+                    then current ^. responseTimes
+                    else HashMap.insertWith
+                           (\(a, b) (c, d) -> (a + c, b + d))
+                           (aleHost x <> rrPath (requestUri $ aleRequest x))
+                           (1, aleResponseTime x)
+                           (current ^. responseTimes)) &
+                 responseTime .~
+                 (if aleCacheStatus x == HIT
+                    then current ^. responseTime
+                    else current ^. responseTime <> (Sum . aleResponseTime $ x)) &
+                 totalBandwidth .~
+                 current ^.
+                 totalBandwidth <>
+                 Sum (aleResponseSize x) &
+                 ips .~
+                 HashMap.insertWith
+                   (<>)
+                   (fromIPv4 . aleIP $ x)
+                   1
+                   (current ^. ips) &
+                 botsCache .~
+                 newBotsCache &
+                 bots .~
+                 (case join (HashMap.lookup (aleUserAgent x) newBotsCache) of
+                    Just bot -> HashMap.insertWith (<>) bot 1 (current ^. bots)
+                    _ -> current ^. bots))
   return (undefined :: void, undefined :: r)

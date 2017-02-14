@@ -22,6 +22,7 @@ source-repository head
 library
     exposed-modules:
         NgxTop
+        NgxTop.Bots
         NgxTop.Generator
         NgxTop.UI
         Types
@@ -53,7 +54,8 @@ library
         safe-exceptions >= 0.1.4.0 && < 0.1.5,
         QuickCheck >=2.9.0 && <2.10,
         quickcheck-instances >=0.3.12 && <0.4,
-        time >=1.6.0.1 && <1.7
+        time >=1.6.0.1 && <1.7,
+        stringsearch >= 0.3.6.6 && < 0.4.0
     default-language: Haskell2010
     default-extensions: OverloadedStrings NoImplicitPrelude
     hs-source-dirs: src
