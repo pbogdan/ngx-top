@@ -9,12 +9,12 @@ module NgxTop.Generator
 
 import           Protolude
 
-import qualified Data.ByteString as Bytes
 import           Data.IP
 import           Data.String
 import           Data.Time
 import           Log.Nginx.Gateway
 import           Log.Nginx.Types
+import qualified NgxTop.Bots as Bots
 import           Pipes
 import qualified Pipes.ByteString as PB
 import           Test.QuickCheck
@@ -75,6 +75,7 @@ instance Arbitrary Request where
 
 newtype SampleLogEntry =
   SampleLogEntry AccessLogEntry
+  deriving (Show)
 
 instance Arbitrary SampleLogEntry where
   arbitrary =
@@ -88,8 +89,11 @@ instance Arbitrary SampleLogEntry where
      arbitrary `suchThat` (\x -> x > 100 && x < 999) <*>
      arbitrary `suchThat` (\x -> x > 100 && x < 999) <*>
      pure Nothing <*>
-     ((fmap toS <$> listOf . elements $ (['a' .. 'z'] ++ ['-'])) `suchThat`
-      ((> 0) . Bytes.length)) <*>
+     oneof
+       (map
+          pure
+          ("Mozilla/5.0 (Linux; Android 5.0.1; SAMSUNG GT-I9515 Build/LRX22C) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/2.1 Chrome/34.0.1847.76 Mobile Safari/537.36" :
+           Bots.bots)) <*>
      arbitrary <*>
      oneof [pure "0", pure "1"] <*>
      (getPositive <$> arbitrary))
