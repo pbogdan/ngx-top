@@ -2,7 +2,7 @@ ngx-top-build:
   image: mitchty/alpine-ghc:latest
   container_name: ngx-top-build-container # to have fixed name
   volumes:
-  - ./build:/build
-  - .:/src/ngx-top
+  - ../build:/build
+  - ..:/src/ngx-top
   working_dir: /tmp
-  command: sh /src/ngx-top/docker-build.sh
+  command: sh /src/ngx-top/build/docker-build-static.sh

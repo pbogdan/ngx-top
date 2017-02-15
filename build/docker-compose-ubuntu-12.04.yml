@@ -1,0 +1,8 @@
+ngx-top-build:
+  image: ubuntu:12.04
+  container_name: ngx-top-build-container-ubuntu-12.04 # to have fixed name
+  volumes:
+  - ../build:/build
+  - ..:/src/ngx-top
+  working_dir: /tmp
+  command: sh /src/ngx-top/build/docker-build-ubuntu.sh 12.04
