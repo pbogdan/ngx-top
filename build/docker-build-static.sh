@@ -16,6 +16,6 @@ apk add alpine-sdk \
     chmod +x /usr/local/bin/upx
 cd /tmp/src/ngx-top && \
     stack install --only-dependencies --system-ghc && \
-    stack --local-bin-path /build/ install --test --system-ghc \
+    stack --local-bin-path /build/static/ install --test --system-ghc \
           --ghc-options '-optl-static' && \
     upx -q /build/ngx-top

@@ -23,5 +23,5 @@ dist-*
 .virthualenv
 TAGS
 *.ps
-/build/ngx-top
-/build/ngx-top-gen
+ngx-top
+ngx-top-gen
