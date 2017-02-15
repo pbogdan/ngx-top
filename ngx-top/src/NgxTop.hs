@@ -22,7 +22,7 @@ import           Graphics.Vty
 import           Log.Nginx.Detect
 import           Log.Nginx.Gateway
 import           Log.Nginx.Types
-import           NgxTop.Bots
+import           NgxTop.Bots hiding (bots)
 import           NgxTop.UI
 import           Pipes hiding (for)
 import qualified Pipes.ByteString as PB

@@ -2,6 +2,7 @@
 
 module NgxTop.Bots
   ( isBot
+  , bots
   ) where
 
 import Protolude
