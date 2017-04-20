@@ -25,3 +25,4 @@ TAGS
 *.ps
 ngx-top
 ngx-top-gen
+/result
