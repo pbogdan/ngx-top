@@ -36,15 +36,19 @@ resolver: nightly-2017-01-31
 # non-dependency (i.e. a user package), and its test suites and benchmarks
 # will not be run. This is useful for tweaking upstream packages.
 packages:
-- './ngx-top/'
-- './log-parser/'
+- '.'
+- location:
+    git: https://github.com/pbogdan/log-parser.git
+    commit: 41d1b9c79f09789f4282fe032d0752538d67a6a4
+  extra-dep: true
 
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
 extra-deps:
-  - tailfile-hinotify-1.0.0.2
-  - streaming-eversion-0.3.1.0
-  - geoip2-0.2.2.0
+- tailfile-hinotify-1.0.0.2
+- streaming-eversion-0.3.1.0
+- geoip2-0.2.2.0
+
 # Override default flag values for local packages and extra-deps
 flags: {}
 
