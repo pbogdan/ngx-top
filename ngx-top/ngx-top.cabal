@@ -29,7 +29,7 @@ library
     other-modules:
         GeoIP
     build-depends:
-        base >=4.7 && <5,
+        base >=4.9 && <5,
         attoparsec >=0.13.1.0 && <0.14,
         brick ==0.17.*,
         containers >=0.5.7.1 && <0.6,
