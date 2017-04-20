@@ -19,6 +19,7 @@ import           Data.IP
 import qualified Data.IntMap.Strict as IntMap
 import           GeoIP
 import           Graphics.Vty
+import           Log.Nginx.Combined
 import           Log.Nginx.Detect
 import           Log.Nginx.Gateway
 import           Log.Nginx.Types
@@ -38,8 +39,9 @@ run path = do
       (evaluate =<<
        (do h <- openFile path ReadMode
            Bytes.hGetLine h))
-  let parser =
-        case detect <$> line of
+  let parsers = [parseGateway, parseCombined]
+      parser =
+        case detect parsers <$> line of
           Left (_ :: SomeException) -> parseGateway
           Right (Just x) -> x
           _ -> parseGateway
