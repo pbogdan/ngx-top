@@ -1,13 +1,17 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module NgxTop
-  ( run
+  ( Settings(..)
+  , defaultSettings
+  , defaultMain
+  , run
   ) where
 
 import           Protolude hiding ((&), try)
 
 import           Brick.BChan
-import           Brick.Main
+import qualified Brick.Main
 import           Control.Concurrent.STM.TVar
 import           Control.Exception.Safe
 import qualified Control.Foldl as Fold
@@ -17,6 +21,8 @@ import           Data.GeoIP2
 import qualified Data.HashMap.Strict as HashMap
 import           Data.IP
 import qualified Data.IntMap.Strict as IntMap
+import           Data.List.NonEmpty (NonEmpty)
+import qualified Data.List.NonEmpty as NE
 import           GeoIP
 import           Graphics.Vty
 import           Log.Nginx.Combined
@@ -32,17 +38,32 @@ import           System.IO.TailFile.Pipes
 import           Types
 import           URI.ByteString
 
-run :: FilePath -> IO ()
-run path = do
+{-# ANN Settings ("HLint: Use newtype instead of data" :: Text) #-}
+data Settings = Settings
+  { parsers :: NonEmpty (ByteString -> Either Text AccessLogEntry)
+  }
+
+defaultSettings :: Settings
+defaultSettings = Settings {parsers = NE.fromList [parseGateway, parseCombined]}
+
+defaultMain :: Settings -> IO ()
+defaultMain settings = do
+  args <- getArgs
+  case args of
+    [] -> putText "Usage: ngx-top logfile"
+    [x] -> run settings x
+    _ -> putText "Usage: ngx-top logfile"
+
+run :: Settings -> FilePath -> IO ()
+run Settings {..} path = do
   line <-
     try
       (evaluate =<<
        (do h <- openFile path ReadMode
            Bytes.hGetLine h))
-  let parsers = [parseGateway, parseCombined]
-      parser =
-        case detect parsers <$> line of
-          Left (_ :: SomeException) -> parseGateway
+  let parser =
+        case detect (NE.toList parsers) <$> line of
+          Left (_ :: SomeException) -> NE.head parsers
           Right (Just x) -> x
           _ -> parseGateway
   db <- openGeoDBBS geoIPDB
@@ -68,7 +89,7 @@ run path = do
     async $
     void $ do
       _ <-
-        customMain
+        Brick.Main.customMain
           (mkVty defaultConfig {termName = Nothing})
           (Just eventChan)
           (app path)
