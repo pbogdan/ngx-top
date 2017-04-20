@@ -18,4 +18,4 @@ cd /tmp/src/ngx-top && \
     stack install --only-dependencies --system-ghc && \
     stack --local-bin-path /build/static/ install --test --system-ghc \
           --ghc-options '-optl-static' && \
-    upx -q /build/ngx-top
+    upx -q /build/static/ngx-top
