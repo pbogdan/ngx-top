@@ -4,20 +4,16 @@ module Log.Nginx.Detect
 
 import Protolude
 
-import Log.Nginx.Combined
-import Log.Nginx.Gateway
 import Log.Nginx.Types
-
 
 hush' :: Either e a -> Maybe a
 hush' (Left _) = Nothing
 hush' (Right x) = Just x
 
-detect :: ByteString -> Maybe (ByteString -> Either Text AccessLogEntry)
-detect s =
+detect
+  :: [ByteString -> Either Text AccessLogEntry]
+  -> ByteString
+  -> Maybe (ByteString -> Either Text AccessLogEntry)
+detect parsers s =
   getFirst . foldr (<>) (First Nothing) $
-  map
-    (First . hush')
-    [ parseGateway s >> return parseGateway
-    , parseCombined s >> return parseCombined
-    ]
+  map ((First . hush') . (\parser -> parser s >> return parser)) parsers
