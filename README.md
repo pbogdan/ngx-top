@@ -47,11 +47,39 @@ This will generate approximately 100 lines per second and write them to `logfile
 
 And in another terminal window:
 
+
 ```
 stack exec -- ngx-top logfile
 ```
 
 `stack exec` invocations above can be replaced with usage of binaries in the build folder if docker-compose build method was used.
+
+### Usage as haskell library
+
+`ngx-top` can also be used as a Haskell library which allows supplying custom parsers without the need to making changes to `ngx-top` itself. The simplest example which replicates the default behaviour would look as follows:
+
+```haskell
+import NgxTop
+
+main = defaultMain defaultSettings
+```
+
+If you wish to inject custom parsers you would also need to depend on the [log-parser](https://github.com/pbogdan/log-parsessr) package. The first step is to write a parser function of the following type:
+
+```haskell
+import Log.Nginx.Types
+
+myParser :: ByteString -> Either Text AccessLogEntry
+```
+
+which is expected to process a single line of input and return either an error or `AccessLogEntry` record. The next and final step is to supply it to `defaultMain` function:
+
+```haskell
+
+import qualified Data.List.NonEmpty as NE
+
+main = defaultMain Settings { parsers = NE.fromList [myParser] }
+```
 
 ## Performance
 
