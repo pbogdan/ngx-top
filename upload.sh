@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [[ -z "${GITHUB_TOKEN}" ]]; then
     echo "Please set GITHUB_TOKEN before uploading."
