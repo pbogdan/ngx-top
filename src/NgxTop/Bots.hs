@@ -5,7 +5,7 @@ module NgxTop.Bots
   , bots
   ) where
 
-import Protolude
+import Protolude hiding (replace)
 
 import Data.ByteString.Search
 import qualified Data.ByteString.Lazy as LazyBytes
