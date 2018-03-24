@@ -15,7 +15,7 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: nightly-2017-01-31
+resolver: lts-11.1
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -39,7 +39,7 @@ packages:
 - '.'
 - location:
     git: https://github.com/pbogdan/log-parser.git
-    commit: 41d1b9c79f09789f4282fe032d0752538d67a6a4
+    commit: 2ea5c2c63a483fa245f8202095232945bfb7507b
   extra-dep: true
 
 # Dependency packages to be pulled from upstream that are not in the resolver
@@ -47,7 +47,13 @@ packages:
 extra-deps:
 - tailfile-hinotify-1.0.0.2
 - streaming-eversion-0.3.1.0
-- geoip2-0.2.2.0
+- streaming-0.1.4.5
+- geoip2-0.3.1.0
+- foldl-1.2.5
+- lens-4.15.4
+- free-4.12.4
+- mmorph-1.0.9
+- resourcet-1.1.11
 
 # Override default flag values for local packages and extra-deps
 flags: {}
@@ -56,7 +62,11 @@ flags: {}
 extra-package-dbs: []
 
 # Control whether we use the GHC we find on the path
-system-ghc: false
+system-ghc: true
+
+# nix:
+#   enable: true
+#   packages: [ ghc git binutils]
 
 #
 # Require a specific version of stack, using version ranges

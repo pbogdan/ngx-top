@@ -31,30 +31,30 @@ library
     build-depends:
         base >=4.9 && <5,
         attoparsec >=0.13.1.0 && <0.14,
-        brick ==0.17.*,
+        brick >=0.29.1,
         containers >=0.5.7.1 && <0.6,
-        foldl >=1.2.3 && <1.3,
+        foldl >=1.2.3,
         iproute >= 1.7 && < 1.8,
-        lens >=4.15.1 && <4.16,
+        lens >=4.15.1,
         log-parser >=0.1.0.0 && <0.2,
         pipes >=4.3.2 && <4.4,
         pipes-attoparsec >=0.5.1.4 && <0.6,
         pipes-bytestring >=2.1.4 && <2.2,
         pipes-group >=1.0.6 && <1.1,
         pipes-parse >=3.0.8 && <3.1,
-        protolude >=0.1.6 && <0.2,
+        protolude >=0.2,
         stm >=2.4.4.1 && <2.5,
-        vty ==5.15.*,
+        vty >=5.15,
         tailfile-hinotify >=1.0.0.2 && <1.1,
         unordered-containers >=0.2.7.2 && <0.3,
-        uri-bytestring >=0.2.2.1 && <0.3,
+        uri-bytestring >=0.2.2.1,
         file-embed >=0.0.10 && < 0.0.11,
-        geoip2 >= 0.2.0.0 && < 0.3.0,
+        geoip2 >= 0.2.0.0,
         bytestring >=0.10.8.1 && <0.11,
-        safe-exceptions >= 0.1.4.0 && < 0.1.5,
-        QuickCheck >=2.9.0 && <2.10,
+        safe-exceptions >= 0.1.4.0,
+        QuickCheck >=2.9.0,
         quickcheck-instances >=0.3.12 && <0.4,
-        time >=1.6.0.1 && <1.7,
+        time >=1.6.0.1,
         stringsearch >= 0.3.6.6 && < 0.4.0
     default-language: Haskell2010
     default-extensions: OverloadedStrings NoImplicitPrelude
@@ -64,9 +64,9 @@ library
 executable ngx-top
     main-is: Main.hs
     build-depends:
-        base >=4.9.1.0 && <4.10,
-        ngx-top >=0.2.0.0 && <0.3,
-        protolude >=0.1.6 && <0.2
+        base >=4.9.1.0 && <5,
+        ngx-top,
+        protolude >=0.2
     default-language: Haskell2010
     default-extensions: OverloadedStrings NoImplicitPrelude
     hs-source-dirs: app
@@ -75,9 +75,9 @@ executable ngx-top
 executable ngx-top-gen
     main-is: Generator.hs
     build-depends:
-        base >=4.9.1.0 && <4.10,
-        ngx-top >=0.2.0.0 && <0.3,
-        protolude >=0.1.6 && <0.2
+        base >=4.9.1.0 && <5,
+        ngx-top,
+        protolude >=0.2
     default-language: Haskell2010
     default-extensions: OverloadedStrings NoImplicitPrelude
     hs-source-dirs: app
@@ -87,9 +87,9 @@ test-suite ngx-top-test
     type: exitcode-stdio-1.0
     main-is: Spec.hs
     build-depends:
-        base >=4.9.1.0 && <4.10,
-        ngx-top >=0.2.0.0 && <0.3,
-        protolude >=0.1.6 && <0.2
+        base >=4.9.1.0 && <5,
+        ngx-top,
+        protolude >=0.2
     default-language: Haskell2010
     default-extensions: OverloadedStrings NoImplicitPrelude
     hs-source-dirs: test
