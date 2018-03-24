@@ -196,21 +196,22 @@ ui path stats =
 app :: FilePath -> App Stats Update ()
 app path =
   App
-  { appDraw = draw path
-  , appHandleEvent = eventHandler
-  , appStartEvent = return
-  , appAttrMap =
-      const $
-      attrMap
-        defAttr
-        [ (attrName "bold", Attr (SetTo bold) Default Default)
-        , (attrName "ok", fg green)
-        , (attrName "warning", fg yellow)
-        , (attrName "error", fg red)
-        , (attrName "header", Attr Default (SetTo brightWhite) (SetTo green))
-        ]
-  , appChooseCursor = neverShowCursor
-  }
+    { appDraw = draw path
+    , appHandleEvent = eventHandler
+    , appStartEvent = return
+    , appAttrMap =
+        const $
+        attrMap
+          defAttr
+          [ (attrName "bold", Attr (SetTo bold) Default Default Default)
+          , (attrName "ok", fg green)
+          , (attrName "warning", fg yellow)
+          , (attrName "error", fg red)
+          , ( attrName "header"
+            , Attr Default (SetTo brightWhite) (SetTo green) Default)
+          ]
+    , appChooseCursor = neverShowCursor
+    }
 
 draw :: FilePath -> Stats -> [Widget ()]
 draw path stats = [ui path stats]
