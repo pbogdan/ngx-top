@@ -15,6 +15,8 @@ import           Data.GeoIP2
 import qualified Data.HashMap.Strict as HashMap
 import           Data.IP
 import qualified Data.IntMap as IntMap
+import           Data.List.NonEmpty (NonEmpty)
+import qualified Data.List.NonEmpty as NE
 import           Graphics.Vty hiding (pad)
 import           Types
 
@@ -180,9 +182,15 @@ round'
 round' f n = fromInteger (round $ f * (10 ^ n)) / (10.0 ^^ n)
 
 
-ui :: FilePath -> Stats -> Widget ()
-ui path stats =
-  hBox [padLeft (Pad 1) $ padRight (Pad 1) $str ("ngx-top @ " <> path)] <=>
+ui :: NonEmpty FilePath -> Stats -> Widget ()
+ui paths stats =
+  hBox
+    [ padLeft (Pad 1) $
+      padRight
+        (Pad 1)
+        $str
+        ("ngx-top @ " <> (foldr (<>) "" . NE.intersperse " " $ paths))
+    ] <=>
   hBorder <=>
   (responseCodesWidget stats <+>
    cacheHitWidget stats <+> topIPWidget stats <+> topDomainsWidget stats) <=>
@@ -193,10 +201,10 @@ ui path stats =
   str " " <=>
   topBotsWidget stats
 
-app :: FilePath -> App Stats Update ()
-app path =
+app :: NonEmpty FilePath -> App Stats Update ()
+app paths =
   App
-    { appDraw = draw path
+    { appDraw = draw paths
     , appHandleEvent = eventHandler
     , appStartEvent = return
     , appAttrMap =
@@ -213,8 +221,8 @@ app path =
     , appChooseCursor = neverShowCursor
     }
 
-draw :: FilePath -> Stats -> [Widget ()]
-draw path stats = [ui path stats]
+draw :: NonEmpty FilePath -> Stats -> [Widget ()]
+draw paths stats = [ui paths stats]
 
 data Update = Update Stats
 

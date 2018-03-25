@@ -29,7 +29,7 @@ Statically and dynamically linked binaries are now available via Releases sectio
 ## Usage
 
 ```
-$ ngx-top logfile
+$ ngx-top logfile [logfile...]
 ```
 
 Currently ngx-top supports log files in the default combined format and a custom gateway format. At this time only the custom format contains all the required information to enable full current feature set.  
