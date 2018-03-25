@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 cp -r /src/ .
 rm -r **/*/.stack-work
 apt-get update
