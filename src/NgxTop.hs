@@ -38,7 +38,7 @@ import           System.IO.TailFile.Pipes
 import           Types
 import           URI.ByteString
 
-{-# ANN Settings ("HLint: Use newtype instead of data" :: Text) #-}
+{-# ANN Settings ("HLint: ignore Use newtype instead of data" :: Text) #-}
 data Settings = Settings
   { parsers :: NonEmpty (ByteString -> Either Text AccessLogEntry)
   }
@@ -50,16 +50,17 @@ defaultMain :: Settings -> IO ()
 defaultMain settings = do
   args <- getArgs
   case args of
-    [] -> putText "Usage: ngx-top logfile"
-    [x] -> run settings x
-    _ -> putText "Usage: ngx-top logfile"
+    [] -> do
+      putText "Usage: ngx-top logfile [logfile...]"
+      exitFailure
+    xs -> run settings (NE.fromList xs)
 
-run :: Settings -> FilePath -> IO ()
-run Settings {..} path = do
+run :: Settings -> NonEmpty FilePath -> IO ()
+run Settings {..} paths = do
   line <-
     try
       (evaluate =<<
-       (do h <- openFile path ReadMode
+       (do h <- openFile (NE.head paths) ReadMode
            Bytes.hGetLine h))
   let parser =
         case detect (NE.toList parsers) <$> line of
@@ -84,7 +85,8 @@ run Settings {..} path = do
           HashMap.empty
   stats <- atomically $ newTVar initialStats
   eventChan <- newBChan 10
-  a <- async $ void $ tailFile path (updateStats stats parser)
+  as <-
+    for paths $ \path -> async $ void $ tailFile path (updateStats stats parser)
   b <-
     async $
     void $ do
@@ -92,7 +94,7 @@ run Settings {..} path = do
         Brick.Main.customMain
           (mkVty defaultConfig {termName = Nothing})
           (Just eventChan)
-          (app path)
+          (app paths)
           initialStats
       return ()
   c <-
@@ -106,9 +108,11 @@ run Settings {..} path = do
           writeBChan eventChan $ Update current
           threadDelay 1000000
         else threadDelay 5000
-  (_, ret) <- waitAnyCatchCancel [a, b, c]
+  (_, ret) <- waitAnyCatchCancel (NE.toList as ++ [b, c])
   case ret of
-    Left e -> print e
+    Left e -> do
+      putText . toS . displayException $ e
+      exitFailure
     Right _ -> return ()
 
 lined
