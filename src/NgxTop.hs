@@ -67,8 +67,9 @@ run Settings {..} paths = do
           Left (_ :: SomeException) -> NE.head parsers
           Right (Just x) -> x
           _ -> parseGateway
-  db <- openGeoDBBS geoIPDB
-  let initialStats =
+  let
+    Right db = openGeoDBBS geoIPDB
+    initialStats =
         Stats
           0
           0
@@ -90,9 +91,12 @@ run Settings {..} paths = do
   b <-
     async $
     void $ do
+      let buildVty = mkVty defaultConfig {termName = Nothing}
+      initialVty <- buildVty
       _ <-
         Brick.Main.customMain
-          (mkVty defaultConfig {termName = Nothing})
+          initialVty
+          buildVty
           (Just eventChan)
           (app paths)
           initialStats

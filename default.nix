@@ -1,9 +1,10 @@
-{ nixpkgs ? import <nixpkgs> {}, compiler ? "ghc822" }:
-with nixpkgs.pkgs.haskell.lib;
-let log-parser-src = (nixpkgs.fetchgit {
+{ nixpkgs ? import <nixpkgs> {}, compiler ? "ghc865" }:
+let
+    inherit (nixpkgs.pkgs.haskell.lib) doJailbreak;
+    log-parser-src = (nixpkgs.fetchgit {
       url = "https://github.com/pbogdan/log-parser";
-      rev = "2ea5c2c63a483fa245f8202095232945bfb7507b";
-      sha256 = "1dwk3sy1ghq4yjdyil33l4kxnx4chy55a1yjnf498yvfiia33s6z";
+      rev = "4f073681f3714298185cf0077358e45e0c657d45";
+      sha256 = "18c4hnv8svpb5gl36j6kvf67zahvi9rqd7ynv83dqwrx6w2s4rhr";
     });
     packageOverrides = super: let self = super.pkgs; in
     {
@@ -11,8 +12,6 @@ let log-parser-src = (nixpkgs.fetchgit {
             packages = super.haskell.packages // {
                 "${compiler}" = super.haskell.packages.${compiler}.override {
                     overrides = self: super: {
-                        streaming = (doJailbreak (self.callHackage "streaming" "0.1.4.5" {}));
-                        tailfile-hinotify = (doJailbreak super.tailfile-hinotify);
                     };
                 };
             };
@@ -21,5 +20,5 @@ let log-parser-src = (nixpkgs.fetchgit {
     config =  { inherit packageOverrides; };
     pkgs = (import <nixpkgs> { inherit config; }).pkgs;
 in  pkgs.haskell.packages.${compiler}.callPackage ./ngx-top.nix {
-    log-parser = import (log-parser-src) { };
+    log-parser = import (log-parser-src) { inherit nixpkgs compiler; };
 }
