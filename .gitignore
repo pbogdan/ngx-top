@@ -27,3 +27,4 @@ ngx-top
 ngx-top-gen
 /result
 /TODO.md
+stack*.yaml.lock
