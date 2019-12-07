@@ -22,5 +22,17 @@
         "type": "tarball",
         "url": "https://github.com/NixOS/nixpkgs-channels/archive/131ff6dd9c8dc64dc7e0c4ece49782dbf54bff83.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "nixpkgs-haskell-static": {
+        "branch": "master",
+        "description": "Nix Packages collection",
+        "homepage": null,
+        "owner": "nh2",
+        "repo": "nixpkgs",
+        "rev": "11aa987ea5b5a593c9ca7a38b391804959f905e5",
+        "sha256": "1wns6051fxpgmszyxjvk7020zzhljjxqxkrnqmyd3b6fah7q4vny",
+        "type": "tarball",
+        "url": "https://github.com/nh2/nixpkgs/archive/11aa987ea5b5a593c9ca7a38b391804959f905e5.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }
