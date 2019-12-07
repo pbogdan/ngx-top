@@ -1,0 +1,26 @@
+{
+    "log-parser": {
+        "branch": "master",
+        "description": null,
+        "homepage": null,
+        "owner": "pbogdan",
+        "repo": "log-parser",
+        "rev": "51cc99564b7d9e4d4feea7d2b185c8d5f880d765",
+        "sha256": "1gvxbni0kf6y4r14c02k335wmqi8shsqaqp5r7x4gfy0p47j8qfn",
+        "type": "tarball",
+        "url": "https://github.com/pbogdan/log-parser/archive/51cc99564b7d9e4d4feea7d2b185c8d5f880d765.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "nixpkgs": {
+        "branch": "nixos-19.09",
+        "description": "A read-only mirror of NixOS/nixpkgs tracking the released channels. Send issues and PRs to",
+        "homepage": "https://github.com/NixOS/nixpkgs",
+        "owner": "NixOS",
+        "repo": "nixpkgs-channels",
+        "rev": "131ff6dd9c8dc64dc7e0c4ece49782dbf54bff83",
+        "sha256": "012513794dvpg4kdwmyj4a04vgz56w9k1y9jp3c81f3zwzrclqha",
+        "type": "tarball",
+        "url": "https://github.com/NixOS/nixpkgs-channels/archive/131ff6dd9c8dc64dc7e0c4ece49782dbf54bff83.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    }
+}
